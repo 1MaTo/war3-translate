@@ -8,14 +8,21 @@
     "resolveJsonModule": true,
     "noUnusedLocals": true,
     "declaration": true,
-
     "verbatimModuleSyntax": true,
-
     "strict": true,
     "skipLibCheck": true,
     "erasableSyntaxOnly": true,
 
-    "types": ["node"]
+    "noUncheckedIndexedAccess": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "exactOptionalPropertyTypes": false,
+
+    "types": ["node"],
+    "plugins": [
+      {
+        "name": "@effect/language-service"
+      }
+    ]
   },
   "include": ["src"]
 }
