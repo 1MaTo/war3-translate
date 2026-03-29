@@ -1,9 +1,6 @@
 import { Schema } from "effect";
 
-import { StringsExtension, JASSExtension } from "../steps/store/extensions";
-import type { TranslateFromLocale, TranslateToLocale } from "../steps/store/locales";
-
-/** List of properties that hold locale specific strings (not 100% full, can be updated later) */
+/** List of properties that might hold substrings for translation (not 100% coverage, might be updated) */
 export const StringsFileProperties = Schema.Literal(
   "agility",
   "agility_hilight",
@@ -49,21 +46,3 @@ export const StringsFileProperties = Schema.Literal(
   "upkeep_none",
 );
 export type StringsFileProperties = typeof StringsFileProperties.Type;
-
-export type TranslateConfig = {
-  /** Path to file */
-  pathToMap: string;
-  /** Optional path to listfile */
-  pathToListFile?: string;
-  fromLanguage: TranslateFromLocale;
-  toLanguage: TranslateToLocale;
-  translateOptions?: Partial<TranslateOptions>;
-};
-
-const translateOptions = Schema.Struct({
-  [StringsExtension.Type]: Schema.Struct({
-    propertyList: Schema.Array(StringsFileProperties),
-  }),
-  [JASSExtension.Type]: Schema.Struct({}),
-});
-export type TranslateOptions = typeof translateOptions.Type;

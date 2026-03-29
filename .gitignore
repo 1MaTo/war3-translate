@@ -1,5 +1,4 @@
 node_modules
 dist
 .env.secret
-.excalidraw
-src/**/work-files
+src/**/tmp

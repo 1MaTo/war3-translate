@@ -1,3 +1,0 @@
-import { Data } from "effect";
-
-export class FileError extends Data.TaggedError("FileError")<{ readonly message?: string }> {}

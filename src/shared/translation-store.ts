@@ -8,10 +8,12 @@ export type FileTranslateInfo = {
   translateList: string[];
 };
 
+export type PushStringToStoreAction = (record: string) => Effect.Effect<number>;
+
 /** Store raw / translated info */
 export class TranslationStore {
   /** Add new string to translate list, return index to get raw or translated variant */
-  add: (record: string) => Effect.Effect<number>;
+  add: PushStringToStoreAction;
 
   constructor(state: Ref.Ref<FileTranslateInfo>) {
     this.add = (record: string) =>

@@ -3,5 +3,25 @@
   "editor.defaultFormatter": "oxc.oxc-vscode",
   "editor.formatOnSave": true,
   "js/ts.tsdk.path": "node_modules\\typescript\\lib",
-  "cSpell.words": ["jamiephan", "listfile", "stormlib"]
+  "cSpell.words": [
+    "awakentip",
+    "bufftip",
+    "buffubertip",
+    "goldandlumberfromally",
+    "goldfromally",
+    "hilight",
+    "hpregen",
+    "jamiephan",
+    "JASS",
+    "listfile",
+    "lumberfromally",
+    "manaregen",
+    "nogold",
+    "nolumber",
+    "propernames",
+    "revivetip",
+    "stormlib",
+    "Untip",
+    "Unubertip"
+  ]
 }
