@@ -11,7 +11,7 @@ export const parse = (extractedInfo: ExtractedFileInfo[]) =>
   Effect.gen(function* () {
     yield* Effect.promise(() => mkdir(PARSED_DIR, { recursive: true }));
 
-    if (extractedInfo[0]) yield* parseFile(extractedInfo[0]);
+    const parseFileTaskList = extractedInfo.map((info) => parseFile(info));
 
-    /*   yield* Effect.logDebug((yield* (yield* TranslateStore).get).rawList.length); */
+    return yield* Effect.all(parseFileTaskList, { concurrency: "unbounded" });
   });

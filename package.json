@@ -24,12 +24,16 @@
     "lint": "oxlint"
   },
   "dependencies": {
+    "@effect/platform-node": "^0.106.0",
     "@jamiephan/stormlib": "^0.0.2",
+    "better-sqlite3": "^12.8.0",
     "effect": "^3.21.0",
+    "google-translate-api-x": "^10.7.2",
     "immer": "^11.1.4"
   },
   "devDependencies": {
     "@effect/language-service": "^0.84.1",
+    "@types/better-sqlite3": "^7.6.13",
     "@types/node": "^25.5.0",
     "husky": "^9.1.7",
     "lint-staged": "^16.4.0",

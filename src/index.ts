@@ -44,11 +44,11 @@ const debug = Effect.tryPromise(async () => {
 Effect.runPromise(debug);
  */
 
-import { Effect } from "effect";
+import { NodeRuntime } from "@effect/platform-node";
 
 import { translateMap } from "./translate";
 
-Effect.runPromise(
+NodeRuntime.runMain(
   translateMap({
     pathToMap: "C:\\Users\\mato\\Desktop\\MpqEditor\\maps\\fbt_unprotected_list_file.w3x",
     fromLanguage: "ko",

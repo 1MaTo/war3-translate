@@ -23,3 +23,12 @@ export class ParseError extends Data.TaggedError("ParseError")<AppError> {
     });
   }
 }
+
+export class TranslateError extends Data.TaggedError("TranslateError")<AppError> {
+  constructor(message: string, error?: unknown) {
+    super({
+      message: message,
+      originalMessage: isError(error) ? error.message : "unknown",
+    });
+  }
+}
