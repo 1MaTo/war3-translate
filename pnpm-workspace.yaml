@@ -1,0 +1,6 @@
+allowBuilds:
+  "@jamiephan/stormlib": true
+  "@parcel/watcher": false
+  better-sqlite3: true
+  esbuild: false
+  msgpackr-extract: false

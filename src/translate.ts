@@ -5,9 +5,16 @@ import { Effect, Logger, LogLevel, Ref } from "effect";
 
 import { extract } from "./steps/extract";
 import { parse } from "./steps/parse";
-import { TranslateStore, type TranslateProps, type TranslateState } from "./steps/store/store";
+import {
+  GoogleFreeProvider,
+  TranslateStore,
+  type TranslateProps,
+  type TranslateState,
+} from "./steps/store/store";
 
-export const translateMap = (props: TranslateProps) =>
+export const translateMap = (
+  props: Omit<TranslateProps, "provider"> & Partial<Pick<TranslateProps, "provider">>,
+) =>
   Effect.gen(function* () {
     yield* Effect.log(`Map: ${path.basename(props.pathToMap)}`);
 
@@ -22,7 +29,13 @@ export const translateMap = (props: TranslateProps) =>
     Effect.catchAll((error) => Effect.logError(`Translation failed: ${error.message}`)),
     Effect.provideServiceEffect(
       TranslateStore,
-      Ref.make<TranslateState>({ ...props, map: new Archive(), rawList: [], translatedList: [] }),
+      Ref.make<TranslateState>({
+        ...props,
+        map: new Archive(),
+        rawList: [],
+        translatedList: [],
+        provider: props.provider || GoogleFreeProvider.literals[0],
+      }),
     ),
     Effect.withLogSpan("time"),
     Effect.provide(Logger.pretty),

@@ -45,12 +45,25 @@ Effect.runPromise(debug);
  */
 
 import { NodeRuntime } from "@effect/platform-node";
+import { Effect } from "effect";
 
-import { translateMap } from "./translate";
+import { CacheLayer } from "./steps/store/service/cache.service/cache.service";
 
-NodeRuntime.runMain(
+/* NodeRuntime.runMain(
   translateMap({
     pathToMap: "C:\\Users\\mato\\Desktop\\MpqEditor\\maps\\fbt_unprotected_list_file.w3x",
-    fromLanguage: "ko",
+    from: "ko",
+    to: "en",
   }),
+); */
+
+NodeRuntime.runMain(
+  Effect.provide(
+    Effect.gen(function* () {
+      yield* Effect.log("DEBUG START");
+
+      yield* Effect.log("DEBUG END");
+    }),
+    CacheLayer,
+  ),
 );

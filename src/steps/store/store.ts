@@ -1,12 +1,18 @@
 import { Archive } from "@jamiephan/stormlib";
-import { Context, Effect, Option, Ref } from "effect";
+import { Context, Effect, Option, Ref, Schema } from "effect";
 
 import type { ExtensionToTranslate } from "./extensions";
-import type { TranslateFromLocale } from "./locales";
+import type { TranslateFromLocale, TranslateToLocale } from "./locales";
+
+export const GoogleFreeProvider = Schema.Literal("google-free");
+export type GoogleFreeProvider = typeof GoogleFreeProvider.Type;
+export type TranslateProvider = GoogleFreeProvider;
 
 export type TranslateProps = {
   pathToMap: string;
-  fromLanguage: TranslateFromLocale;
+  from: TranslateFromLocale;
+  to: TranslateToLocale;
+  provider: TranslateProvider;
 };
 
 export type TranslateState = TranslateProps & {

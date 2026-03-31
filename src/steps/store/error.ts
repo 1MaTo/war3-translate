@@ -32,3 +32,12 @@ export class TranslateError extends Data.TaggedError("TranslateError")<AppError>
     });
   }
 }
+
+export class CacheError extends Data.TaggedError("CacheError")<AppError> {
+  constructor(message: string, error?: unknown) {
+    super({
+      message: message,
+      originalMessage: isError(error) ? error.message : "unknown",
+    });
+  }
+}
