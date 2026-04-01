@@ -2,6 +2,7 @@
   "oxc.fmt.configPath": ".oxfmtrc.json",
   "editor.defaultFormatter": "oxc.oxc-vscode",
   "editor.formatOnSave": true,
+  "js/ts.tsdk.promptToUseWorkspaceVersion": true,
   "js/ts.tsdk.path": "node_modules\\typescript\\lib",
   "cSpell.words": [
     "AUTOINCREMENT",

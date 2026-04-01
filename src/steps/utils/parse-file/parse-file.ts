@@ -25,7 +25,7 @@ export const parseFile = (
 
     const parseLine = getLineParser({
       extension: extractInfo.extension,
-      fromLanguage: (yield* storeRef.get).fromLanguage,
+      from: (yield* storeRef.get).from,
     });
 
     const lineStream = Stream.acquireRelease(

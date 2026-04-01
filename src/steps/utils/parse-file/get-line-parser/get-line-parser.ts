@@ -10,19 +10,16 @@ const localeMatch: Record<TranslateFromLocale, string> = {
 
 type Props = {
   extension: ExtensionToTranslate;
-} & Pick<TranslateProps, "fromLanguage">;
+} & Pick<TranslateProps, "from">;
 
 /** Return function than takes line and return substring for translation or null if nothing to translate */
-export const getLineParser = ({
-  extension,
-  fromLanguage,
-}: Props): ((line: string) => string | null) => {
+export const getLineParser = ({ extension, from }: Props): ((line: string) => string | null) => {
   switch (extension) {
     case StringsExtension.literals[0]: {
       const propertyList = StringsFileProperties.literals;
 
       const lineMatch = new RegExp(
-        `^(?:${propertyList.join("|")})=(.*${localeMatch[fromLanguage]}+.*)$`,
+        `^(?:${propertyList.join("|")})=(.*${localeMatch[from]}+.*)$`,
         "iu",
       );
       return (line: string) => {

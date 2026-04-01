@@ -24,6 +24,11 @@ export const translateMap = (
     yield* Effect.log("[2] Parsing files...");
     yield* parse(extractInfo);
 
+    /*  yield* Console.table( (yield* (yield* TranslateStore).get).rawList); */
+
+    yield* Effect.log("[3] Translating files...");
+    /* yield* parse(extractInfo); */
+
     yield* Effect.log("Map translated");
   }).pipe(
     Effect.catchAll((error) => Effect.logError(`Translation failed: ${error.message}`)),
