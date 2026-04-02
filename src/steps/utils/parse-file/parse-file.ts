@@ -1,6 +1,7 @@
 import { createReadStream, createWriteStream } from "node:fs";
 import path from "node:path";
 import { createInterface } from "node:readline/promises";
+import { finished } from "node:stream/promises";
 
 import { Effect, Stream } from "effect";
 
@@ -20,8 +21,9 @@ export const parseFile = (
   Effect.gen(function* () {
     const storeRef = yield* TranslateStore;
 
+    const newPath = path.join(PARSED_DIR, extractInfo.name);
     const readStream = createReadStream(extractInfo.systemPath);
-    const writeStream = createWriteStream(path.join(PARSED_DIR, extractInfo.name));
+    const writeStream = createWriteStream(newPath);
 
     const parseLine = getLineParser({
       extension: extractInfo.extension,
@@ -33,9 +35,10 @@ export const parseFile = (
         () => [createInterface({ input: readStream, crlfDelay: Infinity }), writeStream] as const,
       ),
       ([readLineStream, writeStream]) =>
-        Effect.sync(() => {
+        Effect.promise(async () => {
           readLineStream.close();
           writeStream.end();
+          await finished(writeStream);
         }),
     ).pipe(
       Stream.flatMap(([readLineStream]) =>
@@ -48,14 +51,20 @@ export const parseFile = (
 
     const parseMap: Map<number, number> = new Map();
 
+    let linesTotal = 0;
+    let linesReplaced = 0;
     yield* Stream.runForEach(lineStream, ([line, lineIndex]) =>
       Effect.gen(function* () {
         const substringToTranslate = parseLine(line);
+
+        linesTotal++;
 
         if (!substringToTranslate) {
           writeStream.write(`${line}\n`);
           return;
         }
+
+        linesReplaced++;
 
         writeStream.write(`${line.replace(substringToTranslate, SUBSTRING_PLACEHOLDER)}\n`);
         const index = yield* addLineToTranslate(storeRef, substringToTranslate);
@@ -63,5 +72,9 @@ export const parseFile = (
       }),
     );
 
-    return { ...extractInfo, parseMap };
+    yield* Effect.logDebug(
+      `    ${extractInfo.mapPath}; Parsed: ${linesReplaced} lines; Total: ${linesTotal} lines`,
+    );
+
+    return { ...extractInfo, systemPath: newPath, parseMap };
   });

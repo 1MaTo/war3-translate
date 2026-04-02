@@ -1,25 +1,38 @@
 import { pipe } from "effect";
 
+import { ExtensionToTranslate, JASSExtension, StringsExtension } from "../store/extensions";
 import { KO, TranslateToLocale, ZH, type TranslateFromLocale } from "../store/locales";
 
-const colorCode = [/\|c([A-Fa-f0-9]{8})/gi, /\[\[([A-Fa-f0-9]{8})\]\]/gi] as const;
-const colorClose = [/\|r/g, /\[\[R\]\]/g] as const;
-const newLine = [/\|n/g, /\n/g] as const;
-const nextDescription = [/,/g, /<br>/g] as const;
+const colorCode = [/\|c([A-Fa-f0-9]{8})/gi, /\s*\[\[([A-Fa-f0-9]{8})\]\]\s*/gi] as const;
+const colorClose = [/\|r/gi, /\s*\[\[R\]\]\s*/g] as const;
+const newLine = [/\|n/g, /\s*\[\[BRK\]\]\s*/g] as const;
+const nextDescription = [/,/g, /\s*<br>\s*/g] as const;
 
 const encodeCommon = (value: string) =>
   value
-    .replace(colorCode[0], "[[$1]]")
-    .replace(colorClose[0], "[[R]]")
-    .replace(newLine[0], "\n")
-    .replace(nextDescription[0], "<br>");
+    .replace(colorCode[0], " [[$1]] ")
+    .replace(colorClose[0], " [[R]] ")
+    .replace(newLine[0], " [[BRK]] ")
+    .replace(nextDescription[0], " <br> ");
+
+const encodeJassCommon = (value: string) =>
+  value.replace(colorCode[0], " [[$1]] ").replace(colorClose[0], " [[R]] ");
 
 const decodeCommon = (value: string) =>
   value
     .replace(colorCode[1], "|c$1")
     .replace(colorClose[1], "|r")
     .replace(newLine[1], "|n")
-    .replace(nextDescription[1], ",");
+    /** Not allowed, replace with chinese */
+    .replace(/,/g, "，")
+    .replace(nextDescription[1], ",")
+    /** Not allowed, replace with chinese */
+    .replace(/</g, "＜")
+    /** Not allowed, replace with chinese */
+    .replace(/>/g, "＞");
+
+const decodeJassCommon = (value: string) =>
+  value.replace(colorCode[1], "|c$1").replace(colorClose[1], "|r");
 
 /** Select damage string as "민첩X24의" because google translate it badly and not consistent */
 const koreanDamagePhrase = /(\p{Script=Hangul}+)x(\d+(?:.\d+)?\p{Script=Hangul}*)/giu;
@@ -45,13 +58,25 @@ export type WarcraftStringParseProps = {
   to?: TranslateToLocale;
 };
 
-export const warcraftString = {
-  encode: ({ value, from }: WarcraftStringParseProps) =>
-    pipe(value, encodeCommon, (value) => encodeByLocale(value, from)),
+type Parser = {
+  encode: (props: WarcraftStringParseProps) => string;
+  decode: (props: WarcraftStringParseProps) => string;
+  clean?: (value: string) => string;
+};
 
-  decode: ({ value, from, to }: WarcraftStringParseProps) =>
-    pipe(value, decodeCommon, (value) => decodeByLocale(value, from, to)),
+export const warcraftString: Record<ExtensionToTranslate, Parser> = {
+  [StringsExtension.literals[0]]: {
+    encode: ({ value, from }: WarcraftStringParseProps) =>
+      pipe(value, encodeCommon, (value) => encodeByLocale(value, from)),
 
-  clean: (value: string) =>
-    value.replace(colorCode[0], "").replace(colorClose[0], "").replace(newLine[0], "\n"),
+    decode: ({ value, from, to }: WarcraftStringParseProps) =>
+      pipe(value, decodeCommon, (value) => decodeByLocale(value, from, to)),
+
+    clean: (value: string) =>
+      value.replace(colorCode[0], "").replace(colorClose[0], "").replace(newLine[0], "\n"),
+  },
+  [JASSExtension.literals[0]]: {
+    encode: ({ value }: WarcraftStringParseProps) => pipe(value, encodeJassCommon),
+    decode: ({ value }: WarcraftStringParseProps) => pipe(value, decodeJassCommon),
+  },
 };

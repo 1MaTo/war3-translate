@@ -21,6 +21,7 @@
     "nogold",
     "nolumber",
     "propernames",
+    "REPLACEEXISTING",
     "revivetip",
     "stormlib",
     "Untip",

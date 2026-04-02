@@ -13,6 +13,9 @@ export type TranslateProps = {
   from: TranslateFromLocale;
   to: TranslateToLocale;
   provider: TranslateProvider;
+  /** List of file names (as they named in map, case sensitive, with extension)
+   * When specified only this files will be processed */
+  filesToInclude?: string[];
 };
 
 export type TranslateState = TranslateProps & {
@@ -26,23 +29,7 @@ export type TranslateState = TranslateProps & {
 export class TranslateStore extends Context.Tag("TranslateStore")<
   TranslateStore,
   Ref.Ref<TranslateState>
->() {
-  /* add: PushStringToStoreAction;
-
-  constructor(state: Ref.Ref<FileTranslateInfo>) {
-    super
-    this.add = (record: string) =>
-      Effect.gen(function* () {
-        const result = yield* Ref.updateAndGet(state, (draft) =>
-          produce(draft, (state) => {
-            state.rawList.push(record);
-          }),
-        );
-
-        return result.rawList.length - 1;
-      });
-  } */
-}
+>() {}
 
 /** Add line to translation list (if not already exists) and return it index */
 export const addLineToTranslate = (ref: Ref.Ref<TranslateState>, line: string) =>
@@ -59,6 +46,9 @@ export const addLineToTranslate = (ref: Ref.Ref<TranslateState>, line: string) =
     return result.rawList.indexOf(line);
   });
 
+export const setTranslatedList = (ref: Ref.Ref<TranslateState>, list: string[]) =>
+  Ref.update(ref, (state) => ({ ...state, translatedList: list }));
+
 export type ExtractedFileInfo = {
   extension: ExtensionToTranslate;
   /** Filename with full path in system */
@@ -73,3 +63,5 @@ export type ParsedFileInfo = ExtractedFileInfo & {
   /** Map for parsed data, key is line index in file, value is line index in translated list */
   parseMap: Map<number, number>;
 };
+
+export type TranslatedFileInfo = ExtractedFileInfo;

@@ -38,7 +38,6 @@ const hashTranslationItem = ({
   createHash("md5").update([raw, from, to, provider].join(",")).digest("hex");
 
 const initialize = Effect.gen(function* () {
-  yield* Effect.logDebug("Initializing cache...");
   yield* Effect.promise(() => mkdir(FILES_DIR, { recursive: true }));
   const db = new Database(DB_CACHE_PATH);
 
@@ -66,14 +65,11 @@ const initialize = Effect.gen(function* () {
             return yield* new CacheError("For loop error while saving cache");
 
           const hash = hashTranslationItem({ raw, from, provider, to });
-          const result = createOrUpdateTranslation.run({
+          createOrUpdateTranslation.run({
             hash,
             translated,
           });
-
-          yield* Effect.logDebug(`Cache changes: ${result.changes}`);
         }
-        yield* Effect.log(db.prepare("SELECT * from translate_cache").all());
       }),
     getTranslation: ({ rawList, from, to, provider }) =>
       Effect.gen(function* () {
@@ -98,10 +94,5 @@ const initialize = Effect.gen(function* () {
 
 export const CacheLayer = Layer.scoped(
   CacheService,
-  Effect.acquireRelease(initialize, ({ db }) =>
-    Effect.gen(function* () {
-      yield* Effect.logDebug("Saving cache...");
-      db.close();
-    }),
-  ),
+  Effect.acquireRelease(initialize, ({ db }) => Effect.sync(() => db.close())),
 );
