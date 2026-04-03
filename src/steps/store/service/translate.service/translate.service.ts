@@ -1,20 +1,28 @@
 import { Effect } from "effect";
 
-import { TranslateError } from "../../error";
-import { type TranslateState } from "../../store";
 import { CacheLayer, CacheService } from "../cache.service/cache.service";
-import { translateApi } from "./translate-api";
 
-type TranslateProps = Pick<TranslateState, "from" | "to" | "rawList" | "provider">;
+/* type TranslateProps = {
+  from: TranslateFromLocale;
+  to: TranslateToLocale;
+  provider: TranslateProvider;
+  list: string[];
+}; */
 
 export class TranslateService extends Effect.Service<TranslateService>()("TranslateService", {
   effect: Effect.gen(function* () {
-    const cache = yield* CacheService;
+    yield* CacheService;
 
     return {
-      translate: ({ from, to, rawList, provider }: TranslateProps) =>
+      translate: (
+        /* {
+         from, to, list, provider 
+      }: TranslateProps */
+      ) =>
         Effect.gen(function* () {
-          const cachedMap = yield* cache.getTranslation({ from, to, rawList, provider });
+          yield* Effect.log("TODO");
+          yield* Effect.log("TODO");
+          /*  const cachedMap = yield* cache.getTranslation({ from, to, list, provider });
 
           let cacheHit = 0;
           const listToTranslate: string[] = [];
@@ -59,7 +67,7 @@ export class TranslateService extends Effect.Service<TranslateService>()("Transl
             result.push(translated);
           }
 
-          return result;
+          return result; */
         }),
     } as const;
   }),

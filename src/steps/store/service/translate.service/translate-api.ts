@@ -3,7 +3,8 @@ import translate from "google-translate-api-x";
 
 import { TranslateError } from "../../error";
 import { TranslateFromLocale, ZH, type TranslateToLocale } from "../../locales";
-import { GoogleFreeProvider, type TranslateProvider, type TranslateState } from "../../store";
+import { type TranslateState } from "../../store";
+import { GoogleFreeProvider, type TranslateProvider } from "../../translate-provider";
 
 type TranslateApi = (
   props: Pick<TranslateState, "from" | "to" | "rawList">,

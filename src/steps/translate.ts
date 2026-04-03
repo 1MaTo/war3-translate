@@ -1,33 +1,21 @@
 import { Effect } from "effect";
 
-import { TranslateService } from "./store/service/translate.service/translate.service";
-import { setTranslatedList, TranslateStore } from "./store/store";
-import { warcraftString } from "./utils/warcraft-string-parser";
+import { TranslateStore } from "./store/store";
 
 export const translate = Effect.gen(function* () {
-  const store = yield* TranslateStore;
-  const { rawList, from, to, provider } = yield* store.get;
-  const translate = (yield* TranslateService).translate;
+  const { dictionary } = yield* (yield* TranslateStore).get;
 
-  let charCount = 0;
-  const encodedList = rawList.map((item) => {
-    const encoded = warcraftString["txt"].encode({ value: item, from, to });
-    charCount += encoded.length;
-    return encoded;
-  });
-
+  const charCount = dictionary.from.reduce((total, line) => total + line.length, 0);
   yield* Effect.logDebug(`    Char count: ${charCount}`);
-  yield* Effect.logDebug(`    Line count: ${encodedList.length}`);
+  yield* Effect.logDebug(`    Line count: ${dictionary.from.length}`);
 
-  const result = yield* translate({
+  /* const translate = (yield* TranslateService).translate;
+   const result = yield* translate({
     from,
     to,
     provider,
-    rawList: encodedList,
-  });
+    rawList,
+  }); */
 
-  yield* setTranslatedList(
-    store,
-    result.map((item) => warcraftString["txt"].decode({ value: item, from, to })),
-  );
+  /*  yield* setTranslatedList(store, result);  */
 });

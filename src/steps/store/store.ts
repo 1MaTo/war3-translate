@@ -1,12 +1,29 @@
 import { Archive } from "@jamiephan/stormlib";
-import { Context, Effect, Option, Ref, Schema } from "effect";
+import { Context, Effect, Option, Ref } from "effect";
 
 import type { ExtensionToTranslate } from "./extensions";
 import type { TranslateFromLocale, TranslateToLocale } from "./locales";
+import type { TranslateProvider } from "./translate-provider";
 
-export const GoogleFreeProvider = Schema.Literal("google-free");
-export type GoogleFreeProvider = typeof GoogleFreeProvider.Type;
-export type TranslateProvider = GoogleFreeProvider;
+export type TranslateFragment = {
+  /** Hash for fragment, used to replace fragment in file, will be replaced by translated value */
+  hash: string;
+  /** Index of this translation in dictionary */
+  dictionaryIndex: number;
+};
+
+export type ParsedFile = {
+  /** Filename */
+  name: string;
+  extension: ExtensionToTranslate;
+  /** Filename with fill path in map */
+  mapPath: string;
+  /** Key is file line index, starting from 0*/
+  lineMap: Map<number, TranslateFragment[]>;
+};
+
+/** Key is file name */
+export type FileMap = Map<string, ParsedFile>;
 
 export type TranslateProps = {
   pathToMap: string;
@@ -19,11 +36,17 @@ export type TranslateProps = {
 };
 
 export type TranslateState = TranslateProps & {
-  map: Archive;
-  /** Raw strings extracted from files to be translated */
+  /** @deprecated */
   rawList: string[];
-  /** Translated strings */
+  /** @deprecated */
   translatedList: string[];
+
+  map: Archive;
+  fileMap: FileMap;
+  dictionary: {
+    from: string[];
+    to: string[];
+  };
 };
 
 export class TranslateStore extends Context.Tag("TranslateStore")<

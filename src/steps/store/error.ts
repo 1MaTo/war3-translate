@@ -6,10 +6,19 @@ type AppError = {
   originalMessage: string;
 };
 
-export class ExtractError extends Data.TaggedError("ExtractError")<AppError> {
+export class ImportError extends Data.TaggedError("ImportError")<AppError> {
   constructor(message: string, error?: unknown) {
     super({
-      message: message,
+      message: `[IMPORT] ${message}`,
+      originalMessage: isError(error) ? error.message : "unknown",
+    });
+  }
+}
+
+export class ProcessFileError extends Data.TaggedError("ProcessFileError")<AppError> {
+  constructor(message: string, error?: unknown) {
+    super({
+      message: `[PROCESS FILE] ${message}`,
       originalMessage: isError(error) ? error.message : "unknown",
     });
   }
@@ -18,7 +27,16 @@ export class ExtractError extends Data.TaggedError("ExtractError")<AppError> {
 export class ParseError extends Data.TaggedError("ParseError")<AppError> {
   constructor(message: string, error?: unknown) {
     super({
-      message: message,
+      message: `[PARSE] ${message}`,
+      originalMessage: isError(error) ? error.message : "unknown",
+    });
+  }
+}
+
+export class StoreError extends Data.TaggedError("StoreError")<AppError> {
+  constructor(message: string, error?: unknown) {
+    super({
+      message: `[STORE] ${message}`,
       originalMessage: isError(error) ? error.message : "unknown",
     });
   }

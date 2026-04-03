@@ -24,6 +24,7 @@
     "lint": "oxlint"
   },
   "dependencies": {
+    "@effect/platform": "^0.96.0",
     "@effect/platform-node": "^0.106.0",
     "@jamiephan/stormlib": "^0.0.2",
     "better-sqlite3": "^12.8.0",

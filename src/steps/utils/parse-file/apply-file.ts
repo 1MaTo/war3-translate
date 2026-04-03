@@ -8,12 +8,14 @@ import { Effect, Stream } from "effect";
 import { SUBSTRING_PLACEHOLDER, TRANSLATED_DIR } from "../../store/const";
 import { ParseError, TranslateError } from "../../store/error";
 import { TranslateStore, type ParsedFileInfo, type TranslatedFileInfo } from "../../store/store";
+import { warcraftString } from "../warcraft-string-parser";
 
 export const applyToFile = (
   info: ParsedFileInfo,
 ): Effect.Effect<TranslatedFileInfo, ParseError, TranslateStore> =>
   Effect.gen(function* () {
     const storeRef = yield* TranslateStore;
+    const { from, to, translatedList } = yield* storeRef.get;
 
     const newPath = path.join(TRANSLATED_DIR, info.name);
     const readStream = createReadStream(info.systemPath);
@@ -38,7 +40,6 @@ export const applyToFile = (
       ),
     );
 
-    const translatedList = (yield* storeRef.get).translatedList;
     yield* Stream.runForEach(lineStream, ([line, lineIndex]) =>
       Effect.sync(() => {
         const translationIndex = info.parseMap.get(lineIndex);
@@ -53,7 +54,9 @@ export const applyToFile = (
             new TranslateError(`File: ${info.name}, translation for line ${lineIndex} not found`),
           );
 
-        writeStream.write(`${line.replace(SUBSTRING_PLACEHOLDER, translatedString)}\n`);
+        writeStream.write(
+          `${line.replace(SUBSTRING_PLACEHOLDER, warcraftString[info.extension].decode({ value: translatedString, from, to }))}\n`,
+        );
       }),
     );
 

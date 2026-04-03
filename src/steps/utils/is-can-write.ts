@@ -1,7 +1,7 @@
 import type { Archive } from "@jamiephan/stormlib";
 import { Effect } from "effect";
 
-import { ExtractError } from "../store/error";
+import { ImportError } from "../store/error";
 
 /** Fast check if map is writable before any work */
 export const isCanWrite = (map: Archive) =>
@@ -11,5 +11,5 @@ export const isCanWrite = (map: Archive) =>
       map.createFile(filename, Date.now(), filename.length);
       map.removeFile(filename);
     },
-    catch: (error) => new ExtractError("Cannot edit readonly map", error),
+    catch: (error) => new ImportError("Cannot edit readonly map", error),
   });

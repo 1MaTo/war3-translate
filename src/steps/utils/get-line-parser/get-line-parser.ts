@@ -1,9 +1,9 @@
-import { ExtensionToTranslate, StringsExtension, JASSExtension } from "../../../store/extensions";
-import { TranslateFromLocale, KO, ZH } from "../../../store/locales";
-import type { TranslateProps } from "../../../store/store";
+import { ExtensionToTranslate, StringsExtension, JASSExtension } from "../../store/extensions";
+import { TranslateFromLocale, KO, ZH } from "../../store/locales";
+import type { TranslateProps } from "../../store/store";
 import { StringsFileProperties } from "./strings-file-properties";
 
-const localeMatch: Record<TranslateFromLocale, string> = {
+export const localeMatch: Record<TranslateFromLocale, string> = {
   [KO.literals[0]]: "\\p{Script=Hangul}",
   [ZH.literals[0]]: "[\u4E00-\u9FFF]",
 } as const;
@@ -30,7 +30,12 @@ export const getLineParser = ({ extension, from }: Props): ((line: string) => st
     }
 
     case JASSExtension.literals[0]: {
-      return () => null;
+      const lineMatch = new RegExp(`"([^"]*?${localeMatch[from]}+.*?)"`, "iu");
+      return (line: string) => {
+        const match = line.match(lineMatch);
+        if (!match || !match[1]) return null;
+        return match[1];
+      };
     }
 
     default:
