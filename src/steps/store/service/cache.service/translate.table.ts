@@ -1,35 +1,35 @@
 const TABLE = "translate_cache";
 const COLUMN = {
   HASH: "hash",
-  TRANSLATED: "translated",
+  TRANSLATION: "translation",
 } as const;
 
 const initializeScript = `CREATE TABLE IF NOT EXISTS ${TABLE} (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     ${COLUMN.HASH} TEXT NOT NULL UNIQUE,
-    ${COLUMN.TRANSLATED} TEXT NOT NULL
+    ${COLUMN.TRANSLATION} TEXT NOT NULL
   )`;
 
 export type TranslateTableCreateOrUpdatePayload = {
   [COLUMN.HASH]: string;
-  [COLUMN.TRANSLATED]: string;
+  [COLUMN.TRANSLATION]: string;
 };
 
 const createOrUpdateWhereHashScript = `
     INSERT INTO ${TABLE} (
       ${COLUMN.HASH}, 
-      ${COLUMN.TRANSLATED} 
+      ${COLUMN.TRANSLATION} 
     ) VALUES ( 
       @${COLUMN.HASH}, 
-      @${COLUMN.TRANSLATED}
+      @${COLUMN.TRANSLATION}
     ) ON CONFLICT(${COLUMN.HASH}) 
     DO UPDATE SET 
-      ${COLUMN.TRANSLATED} = excluded.${COLUMN.TRANSLATED}`;
+      ${COLUMN.TRANSLATION} = excluded.${COLUMN.TRANSLATION}`;
 
-const getByHash = `SELECT ${COLUMN.TRANSLATED} from ${TABLE} WHERE ${COLUMN.HASH} = ?`;
+const getByHash = `SELECT ${COLUMN.TRANSLATION} from ${TABLE} WHERE ${COLUMN.HASH} = ?`;
 
 export type GetByHashPayload = string;
-export type GetByHashResult = { [COLUMN.TRANSLATED]: string } | undefined;
+export type GetByHashResult = { [COLUMN.TRANSLATION]: string } | undefined;
 
 export const translateTableScript = {
   initialize: initializeScript,

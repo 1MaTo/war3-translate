@@ -7,19 +7,19 @@ import { type TranslateState } from "../../store";
 import { GoogleFreeProvider, type TranslateProvider } from "../../translate-provider";
 
 type TranslateApi = (
-  props: Pick<TranslateState, "from" | "to" | "rawList">,
-) => Effect.Effect<Map<string, string>, TranslateError>;
+  props: Pick<TranslateState, "from" | "to"> & { list: string[] },
+) => Effect.Effect<string[], TranslateError>;
 
 const googleLocale: Partial<Record<TranslateFromLocale | TranslateToLocale, string>> = {
   [ZH.literals[0]]: "zh-Hans",
 };
-const googleFree: TranslateApi = ({ rawList, from, to }) =>
+const googleFree: TranslateApi = ({ list, from, to }) =>
   Effect.gen(function* () {
-    if (rawList.length === 0) return new Map();
+    if (list.length === 0) return [];
 
     const result = yield* Effect.tryPromise({
       try: () =>
-        translate(rawList, {
+        translate(list, {
           from: googleLocale[from] || from,
           to: googleLocale[to] || to,
           forceFrom: true,
@@ -28,15 +28,7 @@ const googleFree: TranslateApi = ({ rawList, from, to }) =>
       catch: (error) => new TranslateError("Translate api call failed", error),
     });
 
-    const translatedMap = new Map<string, string>();
-    for (let index = 0; index < result.length; index++) {
-      const item = result[index];
-      const raw = rawList[index];
-      if (!item || !raw) return yield* new TranslateError("Mismatch in result array from api call");
-      translatedMap.set(raw, item.text);
-    }
-
-    return translatedMap;
+    return result.map((item) => item.text);
   });
 
 export const translateApi: Record<TranslateProvider, TranslateApi> = {

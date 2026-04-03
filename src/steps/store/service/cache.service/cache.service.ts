@@ -1,4 +1,3 @@
-import { createHash } from "node:crypto";
 import { mkdir } from "node:fs/promises";
 
 import Database from "better-sqlite3";
@@ -6,7 +5,6 @@ import { Context, Effect, Layer } from "effect";
 
 import { DB_CACHE_PATH, FILES_DIR } from "../../const";
 import { CacheError } from "../../error";
-import type { TranslateState } from "../../store";
 import {
   translateTableScript,
   type GetByHashPayload,
@@ -14,28 +12,31 @@ import {
   type TranslateTableCreateOrUpdatePayload,
 } from "./translate.table";
 
-type CacheTranslationProps = Required<
-  Pick<TranslateState, "rawList" | "translatedList" | "from" | "to" | "provider">
->;
+export type CacheLookupItem = {
+  hash: string;
+  /** Original order of items to restore after translation */
+  index: number;
+};
+
+export type CacheResultItem = CacheLookupItem & {
+  translation: string;
+};
+
+export type CacheSaveItem = {
+  hash: string;
+  translation: string;
+};
 
 type CacheState = {
   db: Database.Database;
-  cacheTranslation: (props: CacheTranslationProps) => Effect.Effect<void, CacheError>;
+  cacheTranslation: (list: CacheSaveItem[]) => Effect.Effect<void, CacheError>;
   /** Return Map<raw, translated> of found cached entries */
   getTranslation: (
-    props: Omit<CacheTranslationProps, "translatedList">,
-  ) => Effect.Effect<Map<string, string>, CacheError>;
+    list: CacheLookupItem[],
+  ) => Effect.Effect<[CacheResultItem[], CacheLookupItem[]], CacheError>;
 };
 
 export class CacheService extends Context.Tag("CacheService")<CacheService, CacheState>() {}
-
-const hashTranslationItem = ({
-  from,
-  provider,
-  raw,
-  to,
-}: Pick<CacheTranslationProps, "from" | "to" | "provider"> & { raw: string }) =>
-  createHash("md5").update([raw, from, to, provider].join(",")).digest("hex");
 
 const initialize = Effect.gen(function* () {
   yield* Effect.promise(() => mkdir(FILES_DIR, { recursive: true }));
@@ -55,39 +56,36 @@ const initialize = Effect.gen(function* () {
 
   return {
     db,
-    cacheTranslation: ({ rawList, translatedList, from, to, provider }) =>
+    cacheTranslation: (list) =>
       Effect.gen(function* () {
-        for (let index = 0; index < rawList.length; index++) {
-          const raw = rawList[index];
-          const translated = translatedList[index];
+        for (let index = 0; index < list.length; index++) {
+          const item = list[index];
 
-          if (!raw || !translated)
-            return yield* new CacheError("For loop error while saving cache");
+          if (!item) return yield* new CacheError("For loop error while saving cache");
 
-          const hash = hashTranslationItem({ raw, from, provider, to });
-          createOrUpdateTranslation.run({
-            hash,
-            translated,
-          });
+          createOrUpdateTranslation.run(item);
         }
       }),
-    getTranslation: ({ rawList, from, to, provider }) =>
+    getTranslation: (list) =>
       Effect.gen(function* () {
-        const map = new Map<string, string>();
+        const hit: CacheResultItem[] = [];
+        const miss: CacheLookupItem[] = [];
 
-        for (let index = 0; index < rawList.length; index++) {
-          const raw = rawList[index];
-          if (!raw) return yield* new CacheError("For loop error while getting cache");
+        for (let index = 0; index < list.length; index++) {
+          const item = list[index];
+          if (!item) return yield* new CacheError("For loop error while getting cache");
 
-          const hash = hashTranslationItem({ from, to, provider, raw });
+          const row = getTranslationByHash.get(item.hash);
 
-          const row = getTranslationByHash.get(hash);
-          if (!row) continue;
+          if (!row) {
+            miss.push(item);
+            continue;
+          }
 
-          map.set(raw, row.translated);
+          hit.push({ ...item, ...row });
         }
 
-        return map;
+        return [hit, miss];
       }),
   } satisfies CacheState;
 });
