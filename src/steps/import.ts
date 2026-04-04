@@ -24,12 +24,14 @@ export const importFiles = Effect.gen(function* () {
 
   yield* Effect.logDebug("    Extracting files...");
 
-  return yield* extractFiles;
+  yield* extractFiles;
+
+  map.close();
 });
 
 const extractFiles = Effect.gen(function* () {
   yield* Effect.promise(() => mkdir(RAW_DIR, { recursive: true }));
-  const { filesToInclude, map, fileMap } = yield* (yield* TranslateStore).get;
+  const { filesToInclude, filesToExclude, map, fileMap } = yield* (yield* TranslateStore).get;
 
   const files = map.listFiles();
 
@@ -37,6 +39,7 @@ const extractFiles = Effect.gen(function* () {
     if (file.fileSize === 0) continue;
     if (filesToInclude && filesToInclude.length > 0 && !filesToInclude.includes(file.plainName))
       continue;
+    if (filesToExclude && filesToExclude.includes(file.plainName)) continue;
 
     const match = file.name.match(new RegExp(`\\.(${ExtensionToTranslate.literals.join("|")})`));
 

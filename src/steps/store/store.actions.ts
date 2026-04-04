@@ -32,3 +32,10 @@ export const addFragment = (
       fragmentList.push({ dictionaryIndex, hash });
     }),
   );
+
+export const saveTranslations = (ref: Ref.Ref<TranslateState>, list: string[]) =>
+  Ref.update(ref, (state) =>
+    produce(state, (draft) => {
+      draft.dictionary.to = list;
+    }),
+  );

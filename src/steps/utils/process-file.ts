@@ -53,4 +53,4 @@ export const processFileByLine = <E, R>({
   );
 
   yield* Stream.runForEach(lineStream, (data) => processLine(data,) ); */
-  }).pipe(Effect.provide(NodeContext.layer), Effect.asVoid);
+  }).pipe(Effect.provide(NodeContext.layer));

@@ -1,6 +1,7 @@
 import { ExtensionToTranslate, StringsExtension, JASSExtension } from "../../store/extensions";
 import { TranslateFromLocale, KO, ZH } from "../../store/locales";
 import type { TranslateProps } from "../../store/store";
+import { fromIndex } from "../from-index";
 import { StringsFileProperties } from "./strings-file-properties";
 
 export const localeMatch: Record<TranslateFromLocale, string> = {
@@ -12,8 +13,10 @@ type Props = {
   extension: ExtensionToTranslate;
 } & Pick<TranslateProps, "from">;
 
-/** Return function than takes line and return substring for translation or null if nothing to translate */
-export const getLineParser = ({ extension, from }: Props): ((line: string) => string | null) => {
+/** Return function than takes line and return substring for translation or null if nothing to translate
+ * each entry of list guaranteed to be unique
+ */
+export const getLineParser = ({ extension, from }: Props): ((line: string) => string[] | null) => {
   switch (extension) {
     case StringsExtension.literals[0]: {
       const propertyList = StringsFileProperties.literals;
@@ -25,16 +28,21 @@ export const getLineParser = ({ extension, from }: Props): ((line: string) => st
       return (line: string) => {
         const match = line.match(lineMatch);
         if (!match || !match[1]) return null;
-        return match[1];
+        return [match[1]];
       };
     }
 
     case JASSExtension.literals[0]: {
-      const lineMatch = new RegExp(`"([^"]*?${localeMatch[from]}+.*?)"`, "iu");
+      const lineMatch = new RegExp(`"([^"]*?${localeMatch[from]}+.*?)"`, "giu");
       return (line: string) => {
-        const match = line.match(lineMatch);
-        if (!match || !match[1]) return null;
-        return match[1];
+        const match = Array.from(line.matchAll(lineMatch));
+        if (match.length === 0) return null;
+
+        return match.reduce<string[]>((prev, item) => {
+          const fragment = fromIndex(item, 1);
+          if (prev.includes(fragment)) return prev;
+          return [...prev, fragment];
+        }, []);
       };
     }
 

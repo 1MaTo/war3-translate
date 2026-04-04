@@ -18,7 +18,7 @@ export const parse = Effect.gen(function* () {
 
   const fileMap = (yield* (yield* TranslateStore).get).fileMap;
 
-  const parseFileTaskList = Array.from(fileMap.keys()).map((name) => parseFile(name));
+  const parseFileTaskList = Array.from(fileMap.keys()).map(parseFile);
 
   return yield* Effect.all(parseFileTaskList, { concurrency: "unbounded" });
 });
@@ -26,14 +26,14 @@ export const parse = Effect.gen(function* () {
 const parseFile = (name: string) =>
   Effect.gen(function* () {
     const storeRef = yield* TranslateStore;
-    const { fileMap, from, to, provider } = yield* storeRef.get;
+    const { fileMap, from, to, provider } = yield* (yield* TranslateStore).get;
     const info = fileMap.get(name);
     if (!info) return yield* new ParseError(`File ${name} not found`);
 
     const newPath = path.join(PARSED_DIR, info.name);
 
     let linesTotal = 0;
-    let linesReplaced = 0;
+    let fragmentCount = 0;
 
     const parseLine = getLineParser({
       extension: info.extension,
@@ -49,34 +49,39 @@ const parseFile = (name: string) =>
         Effect.gen(function* () {
           linesTotal++;
 
-          const fragment = parseLine(line);
-          if (!fragment) return `${line}\n`;
+          const fragments = parseLine(line);
+          if (!fragments) return `${line}\n`;
 
-          linesReplaced++;
+          fragmentCount += fragments.length;
 
-          const encodedFragment = warcraftString[info.extension].encode({
-            value: fragment,
-            from: from,
-            to: to,
-          });
+          let result = line;
+          for (const fragment of fragments) {
+            const encodedFragment = warcraftString[info.extension].encode({
+              value: fragment,
+              from: from,
+              to: to,
+            });
 
-          const fragmentHash = createHash("md5")
-            .update(preHash)
-            .update(encodedFragment)
-            .digest("hex");
+            const fragmentHash = createHash("md5")
+              .update(preHash)
+              .update(encodedFragment)
+              .digest("hex");
 
-          yield* addFragment(storeRef, {
-            fileName: info.name,
-            fragment: encodedFragment,
-            hash: fragmentHash,
-            lineIndex: index,
-          });
+            yield* addFragment(storeRef, {
+              fileName: info.name,
+              fragment: encodedFragment,
+              hash: fragmentHash,
+              lineIndex: index,
+            });
 
-          return `${line.replaceAll(fragment, fragmentHash)}\n`;
+            result = result.replaceAll(fragment, fragmentHash);
+          }
+
+          return `${result}\n`;
         }),
     });
 
     yield* Effect.logDebug(
-      `    ${info.mapPath}; Parsed: ${linesReplaced} lines; Total: ${linesTotal} lines`,
+      `    ${info.mapPath}; Parsed: ${fragmentCount} fragments; Total: ${linesTotal} lines`,
     );
   });

@@ -27,12 +27,17 @@ export type FileMap = Map<string, ParsedFile>;
 
 export type TranslateProps = {
   pathToMap: string;
+  /** Full path with map name and extension */
+  pathToTranslatedMap?: string;
   from: TranslateFromLocale;
   to: TranslateToLocale;
   provider: TranslateProvider;
   /** List of file names (as they named in map, case sensitive, with extension)
    * When specified only this files will be processed */
   filesToInclude?: string[];
+  /** List of file names (as they named in map, case sensitive, with extension)
+   * When specified this files will not be translated even if specified in filesToInclude */
+  filesToExclude?: string[];
 };
 
 export type TranslateState = TranslateProps & {

@@ -1,73 +1,59 @@
 import { Effect } from "effect";
 
-import { CacheLayer, CacheService } from "../cache.service/cache.service";
+import { fromIndex } from "../../../utils/from-index";
+import type { TranslateFromLocale, TranslateToLocale } from "../../locales";
+import type { TranslateProvider } from "../../translate-provider";
+import { CacheLayer, CacheService, type CacheResultItem } from "../cache.service/cache.service";
+import { translateApi } from "./translate-api";
 
-/* type TranslateProps = {
+export type TranslateListItem = {
+  hash: string;
+  fragment: string;
+  /** Original order of items to restore after translation */
+  index: number;
+};
+
+type TranslateProps = {
+  list: TranslateListItem[];
+  provider: TranslateProvider;
   from: TranslateFromLocale;
   to: TranslateToLocale;
-  provider: TranslateProvider;
-  list: string[];
-}; */
+};
 
 export class TranslateService extends Effect.Service<TranslateService>()("TranslateService", {
   effect: Effect.gen(function* () {
-    yield* CacheService;
+    const cache = yield* CacheService;
 
     return {
-      translate: (
-        /* {
-         from, to, list, provider 
-      }: TranslateProps */
-      ) =>
+      translate: ({ list, provider, from, to }: TranslateProps) =>
         Effect.gen(function* () {
-          yield* Effect.log("TODO");
-          yield* Effect.log("TODO");
-          /*  const cachedMap = yield* cache.getTranslation({ from, to, list, provider });
+          const [hit, miss] = yield* cache.getTranslation(list);
 
-          let cacheHit = 0;
-          const listToTranslate: string[] = [];
-          for (let index = 0; index < rawList.length; index++) {
-            const raw = rawList[index];
+          yield* Effect.logDebug(`        Cache hit: ${hit.length}`);
+          yield* Effect.logDebug(
+            `        Char count to translate: ${miss.reduce((total, item) => total + fromIndex(list, item.index).fragment.length, 0)}`,
+          );
 
-            if (!raw) continue;
-
-            if (cachedMap.has(raw)) {
-              cacheHit++;
-              continue;
-            }
-
-            listToTranslate.push(raw);
-          }
-
-          yield* Effect.logDebug(`        Cached ${cacheHit}`);
-          yield* Effect.logDebug(`        Api ${listToTranslate.length}`);
-
-          const translatedMap = yield* translateApi[provider]({
+          const translationList = yield* translateApi[provider]({
             from,
             to,
-            rawList: listToTranslate,
+            list: miss.map((item) => fromIndex(list, item.index).fragment),
           });
 
-          yield* cache.cacheTranslation({
-            from,
-            to,
-            provider,
-            rawList: listToTranslate,
-            translatedList: Array.from(translatedMap.values()),
-          });
+          const missResult: CacheResultItem[] = [];
 
-          const result: string[] = [];
-          for (let index = 0; index < rawList.length; index++) {
-            const raw = rawList[index];
-            if (!raw) return yield* new TranslateError("Loop index mismatch");
+          for (let index = 0; index < miss.length; index++) {
+            const request = fromIndex(miss, index);
+            const result = fromIndex(translationList, index);
 
-            const translated = cachedMap.get(raw) || translatedMap.get(raw);
-            if (!translated) return yield* new TranslateError("Translation not found");
-
-            result.push(translated);
+            missResult.push({ ...request, translation: result });
           }
 
-          return result; */
+          yield* cache.cacheTranslation(missResult);
+
+          return [...hit, ...missResult]
+            .toSorted((a, b) => a.index - b.index)
+            .map((item) => item.translation);
         }),
     } as const;
   }),

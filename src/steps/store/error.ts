@@ -33,6 +33,15 @@ export class ParseError extends Data.TaggedError("ParseError")<AppError> {
   }
 }
 
+export class ApplyError extends Data.TaggedError("ApplyError")<AppError> {
+  constructor(message: string, error?: unknown) {
+    super({
+      message: `[APPLY] ${message}`,
+      originalMessage: isError(error) ? error.message : "unknown",
+    });
+  }
+}
+
 export class StoreError extends Data.TaggedError("StoreError")<AppError> {
   constructor(message: string, error?: unknown) {
     super({

@@ -3,6 +3,7 @@ import { mkdir } from "node:fs/promises";
 import Database from "better-sqlite3";
 import { Context, Effect, Layer } from "effect";
 
+import { fromIndex } from "../../../utils/from-index";
 import { DB_CACHE_PATH, FILES_DIR } from "../../const";
 import { CacheError } from "../../error";
 import {
@@ -67,19 +68,21 @@ const initialize = Effect.gen(function* () {
         }
       }),
     getTranslation: (list) =>
-      Effect.gen(function* () {
+      Effect.sync(function () {
         const hit: CacheResultItem[] = [];
         const miss: CacheLookupItem[] = [];
 
         for (let index = 0; index < list.length; index++) {
-          const item = list[index];
-          if (!item) return yield* new CacheError("For loop error while getting cache");
-
+          const item = fromIndex(list, index);
           const row = getTranslationByHash.get(item.hash);
 
           if (!row) {
             miss.push(item);
             continue;
+          }
+
+          if (item.hash === "abcf484ed1f328e810396ec63033ef1f") {
+            console.log(row.translation);
           }
 
           hit.push({ ...item, ...row });

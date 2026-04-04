@@ -3,6 +3,8 @@ import path from "node:path";
 import { Archive } from "@jamiephan/stormlib";
 import { Duration, Effect, Layer, Logger, LogLevel, Ref } from "effect";
 
+import { apply } from "./steps/apply";
+import { exportFiles } from "./steps/export";
 import { importFiles } from "./steps/import";
 import { parse } from "./steps/parse";
 import { TranslateService } from "./steps/store/service/translate.service/translate.service";
@@ -35,20 +37,15 @@ export const translateMap = (
 
     yield* withTime(translate, "Translating files...");
 
-    /*yield* Effect.log("Translating files...");
-    const [translatedTime] = yield* Effect.timed(translate);
-    yield* Effect.log(`    Duration: ${translatedTime.pipe(Duration.format)}\n`);
+    yield* withTime(apply, "Applying translation...");
 
-    yield* Effect.log("Applying translation...");
-    const [applyTime, translatedInfo] = yield* Effect.timed(apply(parsedInfo));
-    yield* Effect.log(`    Duration: ${applyTime.pipe(Duration.format)}\n`);
-
-    yield* Effect.log("Export files to map...");
-    const [exportTime] = yield* Effect.timed(exportFiles(translatedInfo));
-    yield* Effect.log(`    Duration: ${exportTime.pipe(Duration.format)}\n`); */
+    yield* withTime(exportFiles, "Export files to map...");
 
     yield* Effect.log("Map translated");
   }).pipe(
+    Effect.provide(
+      Layer.mergeAll(TranslateService.Default, Logger.replace(Logger.defaultLogger, SimpleLogger)),
+    ),
     Effect.provideServiceEffect(
       TranslateStore,
       Ref.make<TranslateState>({
@@ -61,9 +58,7 @@ export const translateMap = (
         fileMap: new Map(),
       }),
     ),
-    Effect.provide(
-      Layer.mergeAll(TranslateService.Default, Logger.replace(Logger.defaultLogger, SimpleLogger)),
-    ),
+
     Effect.catchAll((error) => Effect.logError(`Translation failed: ${error.message}`)),
     Logger.withMinimumLogLevel(LogLevel.Debug),
   );
