@@ -2,7 +2,7 @@ import { Effect } from "effect";
 import translate from "google-translate-api-x";
 
 import { fromIndex } from "../../../utils/from-index";
-import { localeMatch } from "../../../utils/get-line-parser/get-line-parser";
+import { localeMatch } from "../../../utils/get-line-parser/get-file-chunk-utils";
 import { TranslateError } from "../../error";
 import { TranslateFromLocale, ZH, type TranslateToLocale } from "../../locales";
 import { type TranslateState } from "../../store";

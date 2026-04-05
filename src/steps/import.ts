@@ -7,6 +7,7 @@ import { RAW_DIR } from "./store/const";
 import { ImportError } from "./store/error";
 import { ExtensionToTranslate } from "./store/extensions";
 import { TranslateStore } from "./store/store";
+import { addImportedFile } from "./store/store.actions";
 import { isCanWrite } from "./utils/is-can-write";
 
 /** Extract files from map */
@@ -31,7 +32,8 @@ export const importFiles = Effect.gen(function* () {
 
 const extractFiles = Effect.gen(function* () {
   yield* Effect.promise(() => mkdir(RAW_DIR, { recursive: true }));
-  const { filesToInclude, filesToExclude, map, fileMap } = yield* (yield* TranslateStore).get;
+  const storeRef = yield* TranslateStore;
+  const { filesToInclude, filesToExclude, map, fileMap } = yield* storeRef.get;
 
   const files = map.listFiles();
 
@@ -49,7 +51,11 @@ const extractFiles = Effect.gen(function* () {
 
     const extension = yield* Schema.decodeUnknown(ExtensionToTranslate)(match[1]);
     const fileName = file.name.replace(/\\/g, "_").toLowerCase();
-    fileMap.set(fileName, { name: fileName, extension, mapPath: file.name, lineMap: new Map() });
+    yield* addImportedFile(storeRef, {
+      name: fileName,
+      extension,
+      mapPath: file.name,
+    });
     map.extractFile(file.name, path.join(RAW_DIR, fileName));
   }
 

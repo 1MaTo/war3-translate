@@ -8,8 +8,8 @@ import { PARSED_DIR, RAW_DIR } from "./store/const";
 import { ParseError } from "./store/error";
 import { TranslateStore } from "./store/store";
 import { addFragment } from "./store/store.actions";
-import { getLineParser } from "./utils/get-line-parser/get-line-parser";
-import { processFileByLine } from "./utils/process-file";
+import { getFileChunkUtils } from "./utils/get-line-parser/get-file-chunk-utils";
+import { processFile } from "./utils/process-file";
 import { warcraftString } from "./utils/warcraft-string-parser";
 
 /** Parse extracted files */
@@ -32,29 +32,30 @@ const parseFile = (name: string) =>
 
     const newPath = path.join(PARSED_DIR, info.name);
 
-    let linesTotal = 0;
+    let chunksTotal = 0;
     let fragmentCount = 0;
 
-    const parseLine = getLineParser({
+    const { parse, replaceByHash } = getFileChunkUtils({
       extension: info.extension,
       from: from,
     });
 
     const preHash = createHash("md5").update(from).update(to).update(provider).digest();
 
-    yield* processFileByLine({
+    yield* processFile({
+      extension: info.extension,
       fromPath: path.join(RAW_DIR, info.name),
       toPath: newPath,
-      processLine: ([line, index]) =>
+      processData: ([chunk, index]) =>
         Effect.gen(function* () {
-          linesTotal++;
+          chunksTotal++;
 
-          const fragments = parseLine(line);
-          if (!fragments) return `${line}\n`;
+          const fragments = parse(chunk);
+          if (!fragments) return chunk;
 
           fragmentCount += fragments.length;
 
-          let result = line;
+          let result = chunk;
           for (const fragment of fragments) {
             const encodedFragment = warcraftString[info.extension].encode({
               value: fragment,
@@ -74,14 +75,14 @@ const parseFile = (name: string) =>
               lineIndex: index,
             });
 
-            result = result.replaceAll(fragment, fragmentHash);
+            result = replaceByHash({ text: result, fragment, hash: fragmentHash });
           }
 
-          return `${result}\n`;
+          return result;
         }),
     });
 
     yield* Effect.logDebug(
-      `    ${info.mapPath}; Parsed: ${fragmentCount} fragments; Total: ${linesTotal} lines`,
+      `    ${info.mapPath}; Parsed: ${fragmentCount} fragments; Total: ${chunksTotal} lines`,
     );
   });

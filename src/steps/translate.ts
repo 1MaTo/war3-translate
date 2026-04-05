@@ -23,8 +23,6 @@ export const translate = Effect.gen(function* () {
   for (const [, file] of fileMap) {
     for (const [, line] of file.lineMap) {
       for (const fragment of line) {
-        if (list[fragment.dictionaryIndex]) continue;
-
         list[fragment.dictionaryIndex] = {
           hash: fragment.hash,
           fragment: fromIndex(dictionary.from, fragment.dictionaryIndex),

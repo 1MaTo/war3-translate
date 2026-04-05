@@ -2,6 +2,7 @@ import { Ref } from "effect";
 import { produce } from "immer";
 
 import { StoreError } from "./error";
+import type { ExtensionToTranslate } from "./extensions";
 import type { TranslateState } from "./store";
 
 type AddFragmentProps = {
@@ -30,6 +31,17 @@ export const addFragment = (
       if (!fragmentList) throw new StoreError(`${lineIndex} line not found`);
 
       fragmentList.push({ dictionaryIndex, hash });
+    }),
+  );
+
+type AddImportedFileProps = { name: string; extension: ExtensionToTranslate; mapPath: string };
+export const addImportedFile = (
+  ref: Ref.Ref<TranslateState>,
+  { name, ...props }: AddImportedFileProps,
+) =>
+  Ref.update(ref, (state) =>
+    produce(state, (draft) => {
+      draft.fileMap.set(name, { ...props, name, lineMap: new Map() });
     }),
   );
 

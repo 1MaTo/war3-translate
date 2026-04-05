@@ -9,6 +9,7 @@ const newLine = [/\|n/g, /\s*\[\[BRK\]\]\s*/g] as const;
 const nextDescription = [/,/g, /\s*<br>\s*/g] as const;
 /** Weird using of repeated symbols */
 const multiBackslash = [/((?:\\){3,})/gi, /\s*\[\[((?:\\){3,})]\]\s*/gi] as const;
+const newCodeLine = [/\r?\n/g, /\s*\[\[BRKH\]\]\s*/g] as const;
 
 const encodeCommon = (value: string) =>
   value
@@ -21,7 +22,8 @@ const encodeJassCommon = (value: string) =>
   value
     .replace(colorCode[0], " [[$1]] ")
     .replace(colorClose[0], " [[R]] ")
-    .replace(multiBackslash[0], " [[$1]] ");
+    .replace(multiBackslash[0], " [[$1]] ")
+    .replace(newCodeLine[0], " [[BRKH]] ");
 
 const decodeCommon = (value: string) =>
   value
@@ -40,7 +42,8 @@ const decodeJassCommon = (value: string) =>
   value
     .replace(colorCode[1], "|c$1")
     .replace(colorClose[1], "|r")
-    .replace(multiBackslash[1], " $1");
+    .replace(multiBackslash[1], " $1")
+    .replace(newCodeLine[1], "\r\n");
 
 /** Select damage string as "민첩X24의" because google translate it badly and not consistent */
 const koreanDamagePhrase = /(\p{Script=Hangul}+)x(\d+(?:.\d+)?\p{Script=Hangul}*)/giu;

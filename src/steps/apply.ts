@@ -6,9 +6,8 @@ import { Effect } from "effect";
 import { PARSED_DIR, TRANSLATED_DIR } from "./store/const";
 import { ApplyError } from "./store/error";
 import { TranslateStore } from "./store/store";
-import { fromIndex } from "./utils/from-index";
-import { processFileByLine } from "./utils/process-file";
-import { warcraftString } from "./utils/warcraft-string-parser";
+import { getFileChunkUtils } from "./utils/get-line-parser/get-file-chunk-utils";
+import { processFile } from "./utils/process-file";
 
 export const apply = Effect.gen(function* () {
   const { fileMap } = yield* (yield* TranslateStore).get;
@@ -27,27 +26,19 @@ const applyToFile = (fileName: string) =>
     const info = fileMap.get(fileName);
     if (!info) return yield* new ApplyError(`${fileName} not found`);
 
-    yield* processFileByLine({
+    const { getTranslationReplacer } = getFileChunkUtils({
+      extension: info.extension,
+      from: from,
+    });
+    const translationReplacer = getTranslationReplacer({ info, dictionary, to });
+
+    yield* processFile({
+      extension: info.extension,
       fromPath: path.join(PARSED_DIR, info.name),
       toPath: path.join(TRANSLATED_DIR, info.name),
-      processLine: ([line, index]) =>
+      processData: (data) =>
         Effect.sync(function () {
-          const lineInfo = info.lineMap.get(index);
-          if (!lineInfo) return `${line}\n`;
-
-          let result = line;
-          for (const fragment of lineInfo) {
-            result = result.replaceAll(
-              fragment.hash,
-              warcraftString[info.extension].decode({
-                value: fromIndex(dictionary.to, fragment.dictionaryIndex),
-                from,
-                to,
-              }),
-            );
-          }
-
-          return `${result}\n`;
+          return translationReplacer(data);
         }),
     });
   });
