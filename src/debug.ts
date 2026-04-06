@@ -3,11 +3,11 @@ import path from "node:path";
 import { NodeFileSystem } from "@effect/platform-node";
 import { Effect, Layer, Logger } from "effect";
 
-import { FILES_DIR, PARSED_DIR } from "./steps/store/const";
+import { PARSED_DIR, FILES_DIR } from "./steps/store/const";
 import { processFile } from "./steps/utils/process-file";
 import { SimpleLogger } from "./steps/utils/simple-logger";
 
-export const Debug = Effect.gen(function* () {
+export const debug = Effect.gen(function* () {
   yield* Effect.log("DEBUG START");
 
   const filePath = path.join(PARSED_DIR, "debug.j");

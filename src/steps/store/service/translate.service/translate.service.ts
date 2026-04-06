@@ -1,6 +1,7 @@
 import { Effect } from "effect";
 
 import { fromIndex } from "../../../utils/from-index";
+import { getListCharCount } from "../../../utils/get-list-char-count";
 import type { TranslateFromLocale, TranslateToLocale } from "../../locales";
 import type { TranslateProvider } from "../../translate-provider";
 import { CacheLayer, CacheService, type CacheResultItem } from "../cache.service/cache.service";
@@ -29,9 +30,9 @@ export class TranslateService extends Effect.Service<TranslateService>()("Transl
         Effect.gen(function* () {
           const [hit, miss] = yield* cache.getTranslation(list);
 
-          yield* Effect.logDebug(`        Cache hit: ${hit.length}`);
+          yield* Effect.logDebug(`        Cache fragment hit: ${hit.length} / ${list.length}`);
           yield* Effect.logDebug(
-            `        Char count to translate: ${miss.reduce((total, item) => total + fromIndex(list, item.index).fragment.length, 0)}`,
+            `        ${getListCharCount(miss, (item) => fromIndex(list, item.index).fragment)} chars to translate`,
           );
 
           const translationList = yield* translateApi[provider]({

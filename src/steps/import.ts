@@ -47,7 +47,7 @@ const extractFiles = Effect.gen(function* () {
 
     if (!match || !match[1]) continue;
 
-    yield* Effect.logDebug(`        ${file.name} ${file.fileSize}`);
+    yield* Effect.logDebug(`        ${file.name} | size: ${file.fileSize}`);
 
     const extension = yield* Schema.decodeUnknown(ExtensionToTranslate)(match[1]);
     const fileName = file.name.replace(/\\/g, "_").toLowerCase();

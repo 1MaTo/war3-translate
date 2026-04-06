@@ -11,7 +11,7 @@ const program = Effect.gen(function* () {
     pathToTranslatedMap: "M:\\game\\warcraft\\Warcraft_1.28\\Maps\\test\\translated_test.w3x",
     from: "ko",
     to: "en",
-    /* filesToInclude: ["war3map.j"], */
+    /*  filesToInclude: ["CampaignAbilityStrings.txt"], */
   });
 });
 

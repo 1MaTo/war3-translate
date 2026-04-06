@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { mkdir } from "node:fs/promises";
+import { mkdir, rm } from "node:fs/promises";
 import path from "node:path";
 
 import { Effect } from "effect";
@@ -7,7 +7,7 @@ import { Effect } from "effect";
 import { PARSED_DIR, RAW_DIR } from "./store/const";
 import { ParseError } from "./store/error";
 import { TranslateStore } from "./store/store";
-import { addFragment } from "./store/store.actions";
+import { addFragment, removeImportedFile } from "./store/store.actions";
 import { getFileChunkUtils } from "./utils/get-line-parser/get-file-chunk-utils";
 import { processFile } from "./utils/process-file";
 import { warcraftString } from "./utils/warcraft-string-parser";
@@ -30,9 +30,9 @@ const parseFile = (name: string) =>
     const info = fileMap.get(name);
     if (!info) return yield* new ParseError(`File ${name} not found`);
 
+    const oldPath = path.join(RAW_DIR, info.name);
     const newPath = path.join(PARSED_DIR, info.name);
 
-    let chunksTotal = 0;
     let fragmentCount = 0;
 
     const { parse, replaceByHash } = getFileChunkUtils({
@@ -44,12 +44,10 @@ const parseFile = (name: string) =>
 
     yield* processFile({
       extension: info.extension,
-      fromPath: path.join(RAW_DIR, info.name),
+      fromPath: oldPath,
       toPath: newPath,
       processData: ([chunk, index]) =>
         Effect.gen(function* () {
-          chunksTotal++;
-
           const fragments = parse(chunk);
           if (!fragments) return chunk;
 
@@ -82,7 +80,12 @@ const parseFile = (name: string) =>
         }),
     });
 
-    yield* Effect.logDebug(
-      `    ${info.mapPath}; Parsed: ${fragmentCount} fragments; Total: ${chunksTotal} lines`,
-    );
+    if (fragmentCount > 0) {
+      yield* Effect.logDebug(`    ${info.mapPath}`);
+      yield* Effect.logDebug(`        ${fragmentCount} fragments`);
+    } else {
+      yield* removeImportedFile(storeRef, name);
+      yield* Effect.promise(() => rm(oldPath, { force: true }));
+      yield* Effect.promise(() => rm(newPath, { force: true }));
+    }
   });

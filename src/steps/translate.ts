@@ -12,9 +12,7 @@ export const translate = Effect.gen(function* () {
   const storeRef = yield* TranslateStore;
   const { dictionary, from, to, provider, fileMap } = yield* storeRef.get;
 
-  const charCount = dictionary.from.reduce((total, line) => total + line.length, 0);
-  yield* Effect.logDebug(`    Char count: ${charCount}`);
-  yield* Effect.logDebug(`    Fragment count: ${dictionary.from.length}`);
+  yield* Effect.logDebug(`    ${dictionary.from.length} fragments`);
 
   const translate = (yield* TranslateService).translate;
 

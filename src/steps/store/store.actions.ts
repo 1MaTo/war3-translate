@@ -46,6 +46,14 @@ export const addImportedFile = (
     }),
   );
 
+export const removeImportedFile = (ref: Ref.Ref<TranslateState>, name: string) =>
+  Ref.update(ref, (state) =>
+    produce(state, (draft) => {
+      draft.fileMap.delete(name);
+      return draft;
+    }),
+  );
+
 export const saveTranslations = (ref: Ref.Ref<TranslateState>, list: string[]) =>
   Ref.update(ref, (state) =>
     produce(state, (draft) => {
