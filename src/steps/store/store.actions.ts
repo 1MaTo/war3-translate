@@ -42,6 +42,7 @@ export const addImportedFile = (
   Ref.update(ref, (state) =>
     produce(state, (draft) => {
       draft.fileMap.set(name, { ...props, name, lineMap: new Map() });
+      return draft;
     }),
   );
 

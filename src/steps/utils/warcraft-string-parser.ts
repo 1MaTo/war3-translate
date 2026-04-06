@@ -3,47 +3,74 @@ import { pipe } from "effect";
 import { ExtensionToTranslate, JASSExtension, StringsExtension } from "../store/extensions";
 import { KO, TranslateToLocale, ZH, type TranslateFromLocale } from "../store/locales";
 
-const colorCode = [/\|c([A-Fa-f0-9]{8})/gi, /\s*\[\[([A-Fa-f0-9]{8})\]\]\s*/gi] as const;
-const colorClose = [/\|r/gi, /\s*\[\[R\]\]\s*/g] as const;
-const newLine = [/\|n/g, /\s*\[\[BRK\]\]\s*/g] as const;
-const nextDescription = [/,/g, /\s*<br>\s*/g] as const;
-/** Weird using of repeated symbols */
-const multiBackslash = [/((?:\\){3,})/gi, /\s*\[\[((?:\\){3,})]\]\s*/gi] as const;
-const newCodeLine = [/\r?\n/g, /\s*\[\[BRKH\]\]\s*/g] as const;
+//#region COMMON
+
+const strings = {
+  colorCode: [/\|c([A-Fa-f0-9]{8})/gi, /\s*\[\[([A-Fa-f0-9]{8})\]\]\s*/gi],
+  colorClose: [/\|r/gi, /\s*\[\[R\]\]\s*/g],
+  newLine: [/\|n/g, /\s*\[\[BRK\]\]\s*/g],
+  nextDescription: [/,/g, /\s*<br>\s*/g],
+} as const;
+
+//#endregion
+
+//#region JASS
+
+const jass = {
+  colorCode: [/\|c([A-Fa-f0-9]{8})/gi, / *\[\[([A-Fa-f0-9]{8})\]\] */gi],
+  colorClose: [/\|r/gi, / *\[\[R\]\] */g],
+  newLine: [/\|n/g, / *\[\[BRK\]\] */g],
+  nextDescription: [/,/g, / *<br> */g],
+
+  /** Weird using of repeated symbols */
+  multiBackslash: [/((?:\\){3,})/gi, / *\[\[((?:\\){3,})]\] */gi],
+  newCodeLine: [/\r?\n/g, / *\[\[BRKH\]\] */g],
+  /** Used in j file to proper format final string */
+  startEmptySpace: [/^ /g, /\[\[SPCS\]\] ?/g],
+  endEmptySpace: [/ $/g, / ?\[\[SPCE\]\]/g],
+} as const;
+
+//#endregion
 
 const encodeCommon = (value: string) =>
   value
-    .replace(colorCode[0], " [[$1]] ")
-    .replace(colorClose[0], " [[R]] ")
-    .replace(newLine[0], " [[BRK]] ")
-    .replace(nextDescription[0], " <br> ");
+    .replace(strings.colorCode[0], " [[$1]] ")
+    .replace(strings.colorClose[0], " [[R]] ")
+    .replace(strings.newLine[0], " [[BRK]] ")
+    .replace(strings.nextDescription[0], " <br> ");
 
 const encodeJassCommon = (value: string) =>
   value
-    .replace(colorCode[0], " [[$1]] ")
-    .replace(colorClose[0], " [[R]] ")
-    .replace(multiBackslash[0], " [[$1]] ")
-    .replace(newCodeLine[0], " [[BRKH]] ");
+    .replace(jass.startEmptySpace[0], "[[SPCS]] ")
+    .replace(jass.endEmptySpace[0], " [[SPCE]]")
+    .replace(jass.colorCode[0], " [[$1]] ")
+    .replace(jass.colorClose[0], " [[R]] ")
+    .replace(jass.multiBackslash[0], " [[$1]] ")
+    .replace(jass.newCodeLine[0], " [[BRKH]] ");
 
 const decodeCommon = (value: string) =>
   value
-    .replace(colorCode[1], "|c$1")
-    .replace(colorClose[1], "|r")
-    .replace(newLine[1], "|n")
+    .replace(strings.colorCode[1], "|c$1")
+    .replace(strings.colorClose[1], "|r")
+    .replace(strings.newLine[1], "|n")
     /** Not allowed, replace with chinese */
     .replace(/,/g, "，")
-    .replace(nextDescription[1], ",")
+    .replace(strings.nextDescription[1], ",")
     /** Not allowed, replace with chinese */
     .replace(/</g, "＜")
     /** Not allowed, replace with chinese */
-    .replace(/>/g, "＞");
+    .replace(/>/g, "＞")
+    .replace(/^\s*/g, "")
+    .replace(/ *$/g, "");
 
 const decodeJassCommon = (value: string) =>
   value
-    .replace(colorCode[1], "|c$1")
-    .replace(colorClose[1], "|r")
-    .replace(multiBackslash[1], " $1")
-    .replace(newCodeLine[1], "\r\n");
+    .replace(jass.colorCode[1], " |c$1")
+    .replace(jass.colorClose[1], "|r ")
+    .replace(jass.multiBackslash[1], " $1")
+    .replace(jass.newCodeLine[1], "\r\n")
+    .replace(jass.startEmptySpace[1], " ")
+    .replace(jass.endEmptySpace[1], " ");
 
 /** Select damage string as "민첩X24의" because google translate it badly and not consistent */
 const koreanDamagePhrase = /(\p{Script=Hangul}+)x(\d+(?:.\d+)?\p{Script=Hangul}*)/giu;
@@ -84,7 +111,10 @@ export const warcraftString: Record<ExtensionToTranslate, Parser> = {
       pipe(value, decodeCommon, (value) => decodeByLocale(value, from, to)),
 
     clean: (value: string) =>
-      value.replace(colorCode[0], "").replace(colorClose[0], "").replace(newLine[0], "\n"),
+      value
+        .replace(strings.colorCode[0], "")
+        .replace(strings.colorClose[0], "")
+        .replace(strings.newLine[0], "\n"),
   },
   [JASSExtension.literals[0]]: {
     encode: ({ value }: WarcraftStringParseProps) => pipe(value, encodeJassCommon),

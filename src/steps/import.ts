@@ -33,7 +33,7 @@ export const importFiles = Effect.gen(function* () {
 const extractFiles = Effect.gen(function* () {
   yield* Effect.promise(() => mkdir(RAW_DIR, { recursive: true }));
   const storeRef = yield* TranslateStore;
-  const { filesToInclude, filesToExclude, map, fileMap } = yield* storeRef.get;
+  const { filesToInclude, filesToExclude, map } = yield* storeRef.get;
 
   const files = map.listFiles();
 
@@ -59,6 +59,7 @@ const extractFiles = Effect.gen(function* () {
     map.extractFile(file.name, path.join(RAW_DIR, fileName));
   }
 
+  const { fileMap } = yield* storeRef.get;
   if (fileMap.size === 0)
     return yield* new ImportError(
       "No files found for translation, make sure map has listfile or provide one (or generate using MPQEditor)",

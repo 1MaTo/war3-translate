@@ -78,7 +78,7 @@ export const getFileChunkUtils = ({ extension, from }: Props): FileChunkUtils =>
         `(?<=(?:^|[^\\\\])(?:\\\\{2})*)"((?:\\\\.|[^"\\\\])*?${localeMatch[from]}(?:\\\\.|[^"\\\\])*?)"`,
         "guis",
       );
-      console.log(chunkMatch);
+
       return {
         parse: (chunk: string) => {
           const match = Array.from(chunk.matchAll(chunkMatch));
@@ -116,17 +116,6 @@ export const getFileChunkUtils = ({ extension, from }: Props): FileChunkUtils =>
               const translation = hashToTranslation.get(hash);
 
               if (!translation) continue;
-              if (hash === "a7d2013c9e0ff5e8fcce8989aaf30d73") {
-                console.log(
-                  chunk.match(/[0-9a-f]{32}/gi)?.filter((item) => item === hash),
-                  [
-                    /* chunk, */
-                    hash,
-                    translation,
-                  ],
-                  chunk,
-                );
-              }
 
               result = result.replaceAll(hash, translation);
             }

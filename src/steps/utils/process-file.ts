@@ -45,7 +45,7 @@ const stringPipeline =
       Stream.splitLines,
       Stream.zipWithIndex,
       Stream.mapEffect(processChunk),
-      Stream.map((item) => `${item}\n`),
+      Stream.map((item) => `${item}\r\n`),
       Stream.encodeText,
     );
 const jassPipeline =
