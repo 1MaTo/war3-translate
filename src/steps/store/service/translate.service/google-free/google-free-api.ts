@@ -14,8 +14,8 @@ const googleLocale: Partial<Record<TranslateFromLocale | TranslateToLocale, stri
 
 type ItemToTranslate = { index: number; value: string };
 
-const CHARS_PER_REQUEST = 100000;
-const DELAY = Duration.seconds(5);
+const CHARS_PER_REQUEST = 2000;
+const DELAY = Duration.seconds(15);
 const RETRY_COUNT = 10;
 export const googleFree: TranslateApi = ({ list, from, to }) =>
   Effect.gen(function* () {

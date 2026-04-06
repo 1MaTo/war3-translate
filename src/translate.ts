@@ -4,6 +4,7 @@ import { Archive } from "@jamiephan/stormlib";
 import { Duration, Effect, Layer, Logger, LogLevel, Ref } from "effect";
 
 import { apply } from "./steps/apply";
+import { exportFiles } from "./steps/export";
 import { importFiles } from "./steps/import";
 import { parse } from "./steps/parse";
 import { TranslateService } from "./steps/store/service/translate.service/translate.service";
@@ -34,7 +35,7 @@ export const translateMap = (
 
     yield* withTime(apply, "Applying translation...");
 
-    /*   yield* withTime(exportFiles, "Export files to map..."); */
+    yield* withTime(exportFiles, "Export files to map...");
 
     /*  const { dictionary, from, to } = yield* (yield* TranslateStore).get;
     for (let index = 0; index < dictionary.from.length; index++) {
