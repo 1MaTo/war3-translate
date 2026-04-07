@@ -21,9 +21,7 @@ const withTime = <A, E, R>(effect: Effect.Effect<A, E, R>, title: string) =>
     return result;
   });
 
-export const translateMap = (
-  props: Omit<TranslateProps, "provider"> & Partial<Pick<TranslateProps, "provider">>,
-) =>
+export const translateMap = (props: TranslateProps) =>
   Effect.gen(function* () {
     yield* Effect.log(`Map: ${path.basename(props.pathToMap)}\n`);
 
@@ -35,7 +33,7 @@ export const translateMap = (
 
     yield* withTime(apply, "Applying translation...");
 
-    yield* withTime(exportFiles, "Export files to map...");
+    const resultPath = yield* withTime(exportFiles, "Export files to map...");
 
     /*  const { dictionary, from, to } = yield* (yield* TranslateStore).get;
     for (let index = 0; index < dictionary.from.length; index++) {
@@ -50,6 +48,8 @@ export const translateMap = (
     } */
 
     yield* Effect.log("Map translated");
+
+    return resultPath;
   }).pipe(
     Effect.provide(
       Layer.mergeAll(TranslateService.Default, Logger.replace(Logger.defaultLogger, SimpleLogger)),
@@ -59,14 +59,10 @@ export const translateMap = (
       Ref.make<TranslateState>({
         ...props,
         map: new Archive(),
-        rawList: [],
-        translatedList: [],
         provider: props.provider || GoogleFreeProvider.literals[0],
         dictionary: { from: [], to: [] },
         fileMap: new Map(),
       }),
     ),
-
-    Effect.catchAll((error) => Effect.logError(`Translation failed: ${error.message}`)),
     Logger.withMinimumLogLevel(LogLevel.Debug),
   );

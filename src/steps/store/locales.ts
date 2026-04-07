@@ -1,6 +1,6 @@
 import { Schema } from "effect";
 
-/** List of all supported locales */
+// List of all supported locales
 
 export const KO = Schema.Literal("ko");
 export type KO = typeof KO.Type;

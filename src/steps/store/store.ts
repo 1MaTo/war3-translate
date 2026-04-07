@@ -31,7 +31,7 @@ export type TranslateProps = {
   pathToTranslatedMap?: string;
   from: TranslateFromLocale;
   to: TranslateToLocale;
-  provider: TranslateProvider;
+  provider?: TranslateProvider;
   /** List of file names (as they named in map, case sensitive, with extension)
    * When specified only this files will be processed */
   filesToInclude?: string[];
@@ -46,11 +46,7 @@ export type TranslationDictionary = {
 };
 
 export type TranslateState = TranslateProps & {
-  /** @deprecated */
-  rawList: string[];
-  /** @deprecated */
-  translatedList: string[];
-
+  provider: TranslateProvider;
   map: Archive;
   fileMap: FileMap;
   dictionary: TranslationDictionary;

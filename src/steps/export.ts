@@ -28,6 +28,8 @@ export const exportFiles = Effect.gen(function* () {
   }
 
   map.close();
+
+  return pathToClone;
 });
 
 const cloneMap = Effect.gen(function* () {
