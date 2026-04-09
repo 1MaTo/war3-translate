@@ -9,7 +9,7 @@ jobs:
     strategy:
       matrix:
         node-version: [24]
-        registry-url: https://registry.npmjs.org
+
     steps:
       - uses: actions/checkout@v5
       - name: Install pnpm
@@ -20,7 +20,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
-          registry-url: ${{matrix.registry-url}}
+          registry-url: "https://registry.npmjs.org"
           cache: "pnpm"
       - name: Install dependencies
         run: pnpm install
