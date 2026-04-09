@@ -1,6 +1,7 @@
 import { Archive } from "@jamiephan/stormlib";
 import { Context, Ref } from "effect";
 
+import type { StringsFileProperties } from "../utils/get-line-parser/strings-file-properties";
 import type { ExtensionToTranslate } from "./extensions";
 import type { TranslateFromLocale, TranslateToLocale } from "./locales";
 import type { TranslateProvider } from "./translate-provider";
@@ -32,12 +33,16 @@ export type TranslateProps = {
   from: TranslateFromLocale;
   to: TranslateToLocale;
   provider?: TranslateProvider;
+
   /** List of file names (as they named in map, case sensitive, with extension)
    * When specified only this files will be processed */
   filesToInclude?: string[];
   /** List of file names (as they named in map, case sensitive, with extension)
    * When specified this files will not be translated even if specified in filesToInclude */
   filesToExclude?: string[];
+
+  /** List of string files properties to ignore, useful when limited by translation resources as some properties never can be never seen in game */
+  propertiesToExclude?: StringsFileProperties[];
 };
 
 export type TranslationDictionary = {

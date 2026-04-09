@@ -12,7 +12,7 @@ export const localeMatch: Record<TranslateFromLocale, string> = {
 
 type Props = {
   extension: ExtensionToTranslate;
-} & Pick<TranslateProps, "from">;
+} & Pick<TranslateProps, "from" | "propertiesToExclude">;
 
 type ChunkParser = (chunk: string) => string[] | null;
 
@@ -34,10 +34,17 @@ type FileChunkUtils = {
 /** Return function than takes line and return substring for translation or null if nothing to translate
  * each entry of list guaranteed to be unique
  */
-export const getFileChunkUtils = ({ extension, from }: Props): FileChunkUtils => {
+export const getFileChunkUtils = ({
+  extension,
+  from,
+  propertiesToExclude,
+}: Props): FileChunkUtils => {
   switch (extension) {
     case StringsExtension.literals[0]: {
-      const propertyList = StringsFileProperties.literals;
+      const propertyList =
+        propertiesToExclude && propertiesToExclude.length
+          ? StringsFileProperties.literals.filter((item) => !propertiesToExclude.includes(item))
+          : StringsFileProperties.literals;
 
       const lineMatch = new RegExp(
         `^(?:${propertyList.join("|")})=(.*${localeMatch[from]}+.*)$`,

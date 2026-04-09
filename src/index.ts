@@ -6,14 +6,9 @@ import { translateMap } from "./translate";
 
 enableMapSet();
 
-/* {
-      pathToMap: "M:\\game\\warcraft\\Warcraft_1.28\\Maps\\Download\\FBT 1.7.2 Re46fix3.w3x",
-      from: "ko",
-      to: "en",
-    } */
-
 export { TranslateFromLocale, TranslateToLocale, EN, KO, RU, ZH } from "./steps/store/locales";
 export { TranslateProvider, GoogleFreeProvider } from "./steps/store/translate-provider";
+export { StringsFileProperties } from "./steps/utils/get-line-parser/strings-file-properties";
 
 /** Translate map and return path new file */
 export const translate = (props: TranslateProps) => Effect.runPromise(translateMap(props));
