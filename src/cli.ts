@@ -49,11 +49,12 @@ program
     "-s, --save <path>",
     "Path, including filename where translated map will be saved, by default map will be saved in <from> folder with _translated attached to name",
   )
+  .option("-d, --debug", "Run in debug mode", false)
   .action(
     async (
       path,
       from,
-      { to, provider, save, filesToExclude, filesToInclude, excludeStringProps },
+      { to, provider, save, filesToExclude, filesToInclude, excludeStringProps, debug },
     ) => {
       try {
         await translate({
@@ -65,6 +66,7 @@ program
           filesToInclude,
           pathToTranslatedMap: save,
           propertiesToExclude: excludeStringProps,
+          debug,
         });
       } catch (error) {
         console.log(`Error: ${error instanceof Error ? error.message : error}`);
