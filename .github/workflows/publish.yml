@@ -1,0 +1,30 @@
+name: publish
+on:
+  push:
+    branches: prod
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    strategy:
+      matrix:
+        node-version: [24]
+        registry-url: https://registry.npmjs.org
+    steps:
+      - uses: actions/checkout@v5
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          registry-url: ${{matrix.registry-url}}
+          cache: "pnpm"
+      - name: Install dependencies
+        run: pnpm install
+      - name: Publishing
+        run: pnpm run publish-package
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
