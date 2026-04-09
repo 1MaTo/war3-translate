@@ -4,6 +4,10 @@
   "description": "node app to translate warcraft 3 maps",
   "license": "ISC",
   "author": "Ilya Kiselev <ily4368@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/1MaTo/war3-translate"
+  },
   "bin": {
     "war3translate": "dist/cli.cjs"
   },
@@ -25,7 +29,7 @@
     "build": "tsdown",
     "format": "oxfmt",
     "lint": "oxlint",
-    "publish-package": "pnpm publish --publish-branch prod"
+    "publish-package": "pnpm build && pnpm publish --publish-branch prod"
   },
   "dependencies": {
     "@effect/platform": "^0.96.0",
