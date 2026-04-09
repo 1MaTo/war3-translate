@@ -2,20 +2,15 @@ name: publish
 
 on:
   workflow_run:
-    workflows: ["release"]
-    types:
-      - completed
+    workflows: [release]
+    types: [completed]
 
 permissions:
   id-token: write
   contents: read
 
 jobs:
-  publish:
-    if: >
-      github.event.workflow_run.conclusion == 'success' &&
-      github.event.workflow_run.head_branch == 'prod'
-
+  on-success:
     runs-on: ubuntu-24.04
 
     steps:
