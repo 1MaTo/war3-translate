@@ -29,8 +29,7 @@
     "dev": "tsx watch src/index.ts",
     "build": "tsdown",
     "format": "oxfmt",
-    "lint": "oxlint",
-    "publish-package": "pnpm build && pnpm publish --publish-branch prod"
+    "lint": "oxlint"
   },
   "dependencies": {
     "@effect/platform": "^0.96.0",
