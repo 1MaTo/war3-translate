@@ -25,7 +25,7 @@
     "build": "tsdown",
     "format": "oxfmt",
     "lint": "oxlint",
-    "publish": "pnpm publish --publish-branch=prod"
+    "publish-package": "pnpm publish --publish-branch prod"
   },
   "dependencies": {
     "@effect/platform": "^0.96.0",
