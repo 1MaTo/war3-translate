@@ -3,19 +3,22 @@ on:
   push:
     branches: prod
 
+permissions:
+  id-token: write
+  contents: read
+
 jobs:
   build:
+    environment: npm
     runs-on: ubuntu-22.04
     strategy:
       matrix:
         node-version: [24]
 
     steps:
-      - uses: actions/checkout@v5
-      - name: Install pnpm
-        uses: pnpm/action-setup@v4
-      - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: ${{ matrix.node-version }}
           registry-url: "https://registry.npmjs.org"
@@ -24,5 +27,3 @@ jobs:
         run: pnpm install --frozen-lockfile
       - name: Publishing
         run: pnpm run publish-package
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
