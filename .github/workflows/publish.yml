@@ -1,8 +1,11 @@
 name: publish
 
 on:
-  release:
-    types: [published]
+  workflow_run:
+    workflows: ["release"]
+    types:
+      - completed
+    branches: [prod]
 
 permissions:
   id-token: write
@@ -10,27 +13,38 @@ permissions:
 
 jobs:
   publish:
+    if: >
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.head_branch == 'prod'
+
     runs-on: ubuntu-24.04
 
     steps:
-      - name: Download bundled .tgz from GitHub Release
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          gh release download "${{ github.event.release.tag_name }}" \
-            --pattern "*.tgz" \
-            --dir .
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
 
       - name: Install pnpm
         uses: pnpm/action-setup@v5
 
-      - name: Setup Node.js + npm registry
+      - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
           node-version: 24
+          cache: "pnpm"
           registry-url: "https://registry.npmjs.org"
 
-      - name: Publish to npm (Trusted Publishing)
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build
+        run: pnpm run build
+
+      - name: Pack the library
+        run: pnpm pack
+
+      - name: Publish to npm
         run: |
           pnpm publish ./*.tgz \
             --access public \
