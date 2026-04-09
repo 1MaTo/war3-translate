@@ -1,9 +1,8 @@
 name: publish
 
 on:
-  workflow_run:
-    workflows: [release]
-    types: [completed]
+  release:
+    types: [published]
 
 permissions:
   id-token: write
