@@ -1,6 +1,6 @@
 {
   "name": "war3-translate",
-  "version": "0.0.9",
+  "version": "0.0.10",
   "description": "node app to translate warcraft 3 maps",
   "license": "ISC",
   "author": "Mato <ily4368@gmail.com>",
