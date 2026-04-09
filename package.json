@@ -3,25 +3,26 @@
   "version": "0.0.1",
   "description": "node app to translate warcraft 3 maps",
   "license": "ISC",
-  "author": "Ilya Kiselev <ily4368@gmail.com>",
+  "author": "Mato <ily4368@gmail.com>",
   "repository": {
     "type": "git",
     "url": "https://github.com/1MaTo/war3-translate"
   },
   "bin": {
-    "war3translate": "dist/cli.cjs"
+    "war3translate": "dist/cli.mjs"
   },
   "files": [
-    "dist"
+    "dist",
+    "LICENSE"
   ],
   "type": "module",
-  "main": "index.cjs",
-  "types": "./dist/index.d.cts",
+  "main": "index.mjs",
+  "types": "./dist/index.d.mts",
   "imports": {
     "#shared/*.ts": "./src/shared/*.ts"
   },
   "exports": {
-    ".": "./dist/index.cjs",
+    ".": "./dist/index.mjs",
     "./package.json": "./package.json"
   },
   "scripts": {

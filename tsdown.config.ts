@@ -3,11 +3,11 @@ import { defineConfig } from "tsdown";
 export default defineConfig([
   {
     entry: "./src/index.ts",
-    format: "cjs",
+    format: "esm",
   },
   {
     entry: "./src/cli.ts",
-    format: "cjs",
+    format: "esm",
     platform: "node",
     dts: false,
     banner: {
