@@ -42,7 +42,7 @@ program
   .addOption(
     new Option(
       "--exclude-string-props <props...>",
-      "Advanced setting, allow to exclude string file props from translation as some props may never be visible in game, useful when limited by translation api",
+      "Advanced setting allows you to exclude string files from translation, as some of them may never appear in the game; this is useful when the translation API capabilities are limited.",
     ).choices(StringsFileProperties.literals satisfies typeof StringsFileProperties.literals),
   )
   .option(
