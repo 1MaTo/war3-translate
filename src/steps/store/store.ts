@@ -43,6 +43,8 @@ export type TranslateProps = {
 
   /** List of string files properties to ignore, useful when limited by translation resources as some properties never can be never seen in game */
   propertiesToExclude?: StringsFileProperties[];
+  /** If true, tmp folder with files will not be deleted */
+  debug?: boolean;
 };
 
 export type TranslationDictionary = {

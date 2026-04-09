@@ -1,5 +1,6 @@
 import path from "node:path";
 
+import { NodeFileSystem } from "@effect/platform-node";
 import { Archive } from "@jamiephan/stormlib";
 import { Duration, Effect, Layer, Logger, LogLevel, Ref } from "effect";
 
@@ -11,6 +12,7 @@ import { TranslateService } from "./steps/store/service/translate.service/transl
 import { TranslateStore, type TranslateProps, type TranslateState } from "./steps/store/store";
 import { GoogleFreeProvider } from "./steps/store/translate-provider";
 import { translate } from "./steps/translate";
+import { cleanFiles } from "./steps/utils/clean-files";
 import { SimpleLogger } from "./steps/utils/simple-logger";
 
 const withTime = <A, E, R>(effect: Effect.Effect<A, E, R>, title: string) =>
@@ -35,24 +37,17 @@ export const translateMap = (props: TranslateProps) =>
 
     const resultPath = yield* withTime(exportFiles, "Export files to map...");
 
-    /*  const { dictionary, from, to } = yield* (yield* TranslateStore).get;
-    for (let index = 0; index < dictionary.from.length; index++) {
-      const fromS = fromIndex(dictionary.from, index);
-      const toS = fromIndex(dictionary.to, index);
-      console.log([
-        fromS,
-        toS,
-        warcraftString["j"].decode({ value: fromS, from, to }),
-        warcraftString["j"].decode({ value: toS, from, to }),
-      ]);
-    } */
-
     yield* Effect.log("Map translated");
 
     return resultPath;
   }).pipe(
+    Effect.ensuring(cleanFiles),
     Effect.provide(
-      Layer.mergeAll(TranslateService.Default, Logger.replace(Logger.defaultLogger, SimpleLogger)),
+      Layer.mergeAll(
+        NodeFileSystem.layer,
+        TranslateService.Default,
+        Logger.replace(Logger.defaultLogger, SimpleLogger),
+      ),
     ),
     Effect.provideServiceEffect(
       TranslateStore,
