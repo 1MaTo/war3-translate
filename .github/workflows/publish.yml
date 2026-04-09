@@ -1,29 +1,37 @@
 name: publish
+
 on:
-  push:
-    branches: prod
+  release:
+    types: [published]
 
 permissions:
   id-token: write
   contents: read
 
 jobs:
-  build:
-    environment: npm
-    runs-on: ubuntu-22.04
-    strategy:
-      matrix:
-        node-version: [24]
+  publish:
+    runs-on: ubuntu-24.04
 
     steps:
-      - uses: actions/checkout@v6
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v6
+      - name: Download bundled .tgz from GitHub Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release download "${{ github.event.release.tag_name }}" \
+            --pattern "*.tgz" \
+            --dir .
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v5
+
+      - name: Setup Node.js + npm registry
+        uses: actions/setup-node@v6
         with:
-          node-version: ${{ matrix.node-version }}
+          node-version: 24
           registry-url: "https://registry.npmjs.org"
-          cache: "pnpm"
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-      - name: Publishing
-        run: pnpm run publish-package
+
+      - name: Publish to npm (Trusted Publishing)
+        run: |
+          pnpm publish ./*.tgz \
+            --access public \
+            --provenance
