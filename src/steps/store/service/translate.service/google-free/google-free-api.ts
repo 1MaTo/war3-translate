@@ -105,8 +105,9 @@ const callTranslation = ({ list, from, to }: { from: string; to: string; list: s
             `                [${index + 1}] Translating chunk of ${totalCharCount} chars...`,
           );
           const result = yield* Effect.tryPromise({
-            try: () => translate(list, { forceBatch: false, fallbackBatch: false, from, to }),
-            catch: () => new TranslateError("Failed to translate chunk..."),
+            try: () => translate(list, { forceBatch: false, from, to }),
+            catch: (error) =>
+              new TranslateError(`Failed to translate chunk... ${String(error)}`, error),
           });
 
           return Chunk.fromIterable(result.map((item) => item.text));
