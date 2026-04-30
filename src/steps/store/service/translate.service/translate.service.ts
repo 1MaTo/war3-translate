@@ -2,8 +2,7 @@ import { Effect } from "effect";
 
 import { fromIndex } from "../../../utils/from-index";
 import { getListCharCount } from "../../../utils/get-list-char-count";
-import type { TranslateFromLocale, TranslateToLocale } from "../../locales";
-import type { TranslateProvider } from "../../translate-provider";
+import type { TranslateState } from "../../store";
 import { CacheLayer, CacheService, type CacheResultItem } from "../cache.service/cache.service";
 import { translateApi } from "./translate-api";
 
@@ -16,17 +15,14 @@ export type TranslateListItem = {
 
 type TranslateProps = {
   list: TranslateListItem[];
-  provider: TranslateProvider;
-  from: TranslateFromLocale;
-  to: TranslateToLocale;
-};
+} & Pick<TranslateState, "translateApiOptions" | "from" | "to" | "provider">;
 
 export class TranslateService extends Effect.Service<TranslateService>()("TranslateService", {
   effect: Effect.gen(function* () {
     const cache = yield* CacheService;
 
     return {
-      translate: ({ list, provider, from, to }: TranslateProps) =>
+      translate: ({ list, provider, from, to, translateApiOptions }: TranslateProps) =>
         Effect.gen(function* () {
           const [hit, miss] = yield* cache.getTranslation(list);
 
@@ -35,11 +31,15 @@ export class TranslateService extends Effect.Service<TranslateService>()("Transl
             `        ${getListCharCount(miss, (item) => fromIndex(list, item.index).fragment)} chars to translate`,
           );
 
-          const translationList = yield* translateApi[provider]({
-            from,
-            to,
-            list: miss.map((item) => fromIndex(list, item.index).fragment),
-          });
+          const translateList = miss.map((item) => fromIndex(list, item.index).fragment);
+          const translationList = translateList.length
+            ? yield* translateApi[provider]({
+                from,
+                to,
+                list: translateList,
+                translateApiOptions,
+              })
+            : [];
 
           const missResult: CacheResultItem[] = [];
 

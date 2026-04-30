@@ -6,10 +6,12 @@ import { KO, TranslateToLocale, ZH, type TranslateFromLocale } from "../store/lo
 //#region COMMON
 
 const strings = {
+  /** This symbols is badly translated by providers */
+  unsafeSymbols: [/([：])/g, /\[\[([：])\]\]\s*/g],
   colorCode: [/\|c([A-Fa-f0-9]{8})/gi, /\s*\[\[([A-Fa-f0-9]{8})\]\]\s*/gi],
   colorClose: [/\|r/gi, /\s*\[\[R\]\]\s*/g],
   newLine: [/\|n/g, /\s*\[\[BRK\]\]\s*/g],
-  nextDescription: [/,/g, /\s*<br>\s*/g],
+  nextDescription: [/,/g, /\s*<br>\s*/gi],
 } as const;
 
 //#endregion
@@ -37,7 +39,8 @@ const encodeCommon = (value: string) =>
     .replace(strings.colorCode[0], " [[$1]] ")
     .replace(strings.colorClose[0], " [[R]] ")
     .replace(strings.newLine[0], " [[BRK]] ")
-    .replace(strings.nextDescription[0], " <br> ");
+    .replace(strings.nextDescription[0], " <br> ")
+    .replace(strings.unsafeSymbols[0], "[[$1]]");
 
 const encodeJassCommon = (value: string) =>
   value
@@ -53,6 +56,11 @@ const decodeCommon = (value: string) =>
     .replace(strings.colorCode[1], "|c$1")
     .replace(strings.colorClose[1], "|r")
     .replace(strings.newLine[1], "|n")
+    .replace(strings.unsafeSymbols[1], "$1")
+    /** Deepl replace 「」with &quot; */
+    .replace(/&quot;(.*?)&quot;/g, "「$1」")
+    .replace(/“(.*?)”/g, "「$1」")
+    .replace(/\\?"(.*?)\\?"/g, "「$1」")
     /** Not allowed, replace with chinese */
     .replace(/,/g, "，")
     .replace(strings.nextDescription[1], ",")
@@ -75,7 +83,7 @@ const decodeJassCommon = (value: string) =>
 /** Select damage string as "민첩X24의" because google translate it badly and not consistent */
 const koreanDamagePhrase = /(\p{Script=Hangul}+)x(\d+(?:.\d+)?\p{Script=Hangul}*)/giu;
 const encodeForLocale: Record<TranslateFromLocale, (raw: string) => string> = {
-  [KO.literals[0]]: (raw) => raw.replace(koreanDamagePhrase, "「$1x$2」"),
+  [KO.literals[0]]: (raw) => raw.replace(koreanDamagePhrase, "“$1x$2”"),
   [ZH.literals[0]]: (raw) => raw,
 };
 const encodeByLocale = (raw: string, from?: TranslateFromLocale) =>

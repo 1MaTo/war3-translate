@@ -37,6 +37,7 @@
     "@effect/platform-node": "^0.106.0",
     "@jamiephan/stormlib": "^0.0.2",
     "better-sqlite3": "^12.8.0",
+    "deepl-node": "^1.27.0",
     "effect": "^3.21.0",
     "google-translate-api-x": "^10.7.2",
     "immer": "^11.1.4"

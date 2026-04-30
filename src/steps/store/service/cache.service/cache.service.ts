@@ -81,10 +81,6 @@ const initialize = Effect.gen(function* () {
             continue;
           }
 
-          if (item.hash === "abcf484ed1f328e810396ec63033ef1f") {
-            console.log(row.translation);
-          }
-
           hit.push({ ...item, ...row });
         }
 

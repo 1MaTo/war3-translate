@@ -4,6 +4,7 @@ import { Context, Ref } from "effect";
 import type { StringsFileProperties } from "../utils/get-line-parser/strings-file-properties";
 import type { ExtensionToTranslate } from "./extensions";
 import type { TranslateFromLocale, TranslateToLocale } from "./locales";
+import type { DeeplOptions } from "./service/translate.service/deepl/deepl-api";
 import type { TranslateProvider } from "./translate-provider";
 
 export type TranslateFragment = {
@@ -33,6 +34,8 @@ export type TranslateProps = {
   from: TranslateFromLocale;
   to: TranslateToLocale;
   provider?: TranslateProvider;
+  /** Api specific options for translations, context, glossary, auth key, etc... */
+  translateApiOptions?: DeeplOptions;
 
   /** List of file names (as they named in map, case sensitive, with extension)
    * When specified only this files will be processed */

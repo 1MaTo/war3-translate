@@ -1,5 +1,7 @@
+import { FileSystem } from "@effect/platform";
 import { Effect } from "effect";
 
+import { TRANSLATION_LIST_RAW } from "./store/const";
 import {
   TranslateService,
   type TranslateListItem,
@@ -10,7 +12,9 @@ import { fromIndex } from "./utils/from-index";
 
 export const translate = Effect.gen(function* () {
   const storeRef = yield* TranslateStore;
-  const { dictionary, from, to, provider, fileMap } = yield* storeRef.get;
+  const fs = yield* FileSystem.FileSystem;
+  const { dictionary, from, to, provider, fileMap, debug, translateApiOptions } =
+    yield* storeRef.get;
 
   yield* Effect.logDebug(`    ${dictionary.from.length} fragments`);
 
@@ -30,11 +34,16 @@ export const translate = Effect.gen(function* () {
     }
   }
 
+  if (debug) {
+    yield* fs.writeFileString(TRANSLATION_LIST_RAW, list.map((item) => item.fragment).join("\n"));
+  }
+
   const result = yield* translate({
     from,
     to,
     provider,
     list,
+    translateApiOptions,
   });
 
   yield* saveTranslations(storeRef, result);

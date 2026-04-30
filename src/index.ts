@@ -7,7 +7,11 @@ import { translateMap } from "./translate";
 enableMapSet();
 
 export { TranslateFromLocale, TranslateToLocale, EN, KO, RU, ZH } from "./steps/store/locales";
-export { TranslateProvider, GoogleFreeProvider } from "./steps/store/translate-provider";
+export {
+  TranslateProvider,
+  GoogleFreeProvider,
+  DeeplProvider,
+} from "./steps/store/translate-provider";
 export { StringsFileProperties } from "./steps/utils/get-line-parser/strings-file-properties";
 
 /** Translate map and return path new file */

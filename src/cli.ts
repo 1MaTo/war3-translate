@@ -2,6 +2,7 @@ import { Argument, Command, Option } from "commander";
 
 import { version } from "../package.json";
 import {
+  DeeplProvider,
   EN,
   GoogleFreeProvider,
   KO,
@@ -36,12 +37,27 @@ program
       "-p, --provider <provider>",
       "Translation service, default is free google translation api",
     )
-      .choices([GoogleFreeProvider.literals[0]] satisfies typeof TranslateProvider.literals)
+      .choices([
+        GoogleFreeProvider.literals[0],
+        DeeplProvider.literals[0],
+      ] satisfies typeof TranslateProvider.literals)
       .default(GoogleFreeProvider.literals[0]),
   )
   .addOption(
     new Option(
-      "--exclude-string-props <props...>",
+      "--include-files <filesToInclude...>",
+      "List of file names (as they named in map, case sensitive, with extension), when specified only this files will be processed",
+    ),
+  )
+  .addOption(
+    new Option(
+      "--exclude-files <filesToExclude...>",
+      "List of file names (as they named in map, case sensitive, with extension), when specified this files will not be translated even if specified in --include-files",
+    ),
+  )
+  .addOption(
+    new Option(
+      "--exclude-string-props <propertiesToExclude...>",
       "Advanced setting allows you to exclude string files from translation, as some of them may never appear in the game; this is useful when the translation API capabilities are limited.",
     ).choices(StringsFileProperties.literals satisfies typeof StringsFileProperties.literals),
   )
@@ -49,24 +65,61 @@ program
     "-s, --save <path>",
     "Path, including filename where translated map will be saved, by default map will be saved in <from> folder with _translated attached to name",
   )
+  .option(
+    "--deepl-auth-key <deeplAuthKey>",
+    "Your api/auth key when using paid translation provider",
+  )
+  .option(
+    "--deepl-context <deeplContext>",
+    "Context options for deepl api, for more info check deepl api documentation",
+  )
+  .option(
+    "--deepl-glossary-id <deeplGlossaryId>",
+    "Glossary id for deepl api, for more info check deepl api documentation",
+  )
   .option("-d, --debug", "Run in debug mode", false)
+  .hook("preAction", (thisCommand) => {
+    const { provider, deeplAuthKey } = thisCommand.opts();
+
+    if (provider === DeeplProvider.literals[0] && !deeplAuthKey)
+      thisCommand.error("--deepl-auth-key required when using deepl provider");
+  })
   .action(
     async (
       path,
       from,
-      { to, provider, save, filesToExclude, filesToInclude, excludeStringProps, debug },
+      {
+        to,
+        provider,
+        save,
+        includeFiles,
+        excludeFiles,
+        excludeStringProps,
+        debug,
+        deeplAuthKey,
+        deeplContext,
+        deeplGlossaryId,
+      },
     ) => {
+      const isDeepl = provider === DeeplProvider.literals[0];
       try {
         await translate({
           from,
           pathToMap: path,
           to,
           provider,
-          filesToExclude,
-          filesToInclude,
+          filesToInclude: includeFiles,
+          filesToExclude: excludeFiles,
           pathToTranslatedMap: save,
           propertiesToExclude: excludeStringProps,
           debug,
+          translateApiOptions: isDeepl
+            ? {
+                apiKey: deeplAuthKey,
+                context: deeplContext,
+                glossary: deeplGlossaryId,
+              }
+            : undefined,
         });
       } catch (error) {
         console.log(`Error: ${error instanceof Error ? error.message : error}`);
