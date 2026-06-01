@@ -9,8 +9,8 @@ const strings = {
   /** This symbols is badly translated by providers */
   unsafeSymbols: [/([：])/g, /\[\[([：])\]\]\s*/g],
   colorCode: [/\|c([A-Fa-f0-9]{8})/gi, /\s*\[\[([A-Fa-f0-9]{8})\]\]\s*/gi],
-  colorClose: [/\|r/gi, /\s*\[\[R\]\]\s*/g],
-  newLine: [/\|n/g, /\s*\[\[BRK\]\]\s*/g],
+  colorClose: [/\|r/gi, /\s*\[\[R\]\]\s*/gi],
+  newLine: [/\|n/g, /\s*\[\[BRK\]\]\s*/gi],
   nextDescription: [/,/g, /\s*<br>\s*/gi],
 } as const;
 
@@ -26,10 +26,10 @@ const jass = {
 
   /** Weird using of repeated symbols */
   multiBackslash: [/((?:\\){3,})/gi, / *\[\[((?:\\){3,})]\] */gi],
-  newCodeLine: [/\r?\n/g, / *\[\[BRKH\]\] */g],
+  newCodeLine: [/\r?\n/g, / *\[\[BRKH\]\] */gi],
   /** Used in j file to proper format final string */
-  startEmptySpace: [/^ /g, /\[\[SPCS\]\] ?/g],
-  endEmptySpace: [/ $/g, / ?\[\[SPCE\]\]/g],
+  startEmptySpace: [/^ /g, /\[\[SPCS\]\] ?/gi],
+  endEmptySpace: [/ $/g, / ?\[\[SPCE\]\]/gi],
 } as const;
 
 //#endregion
