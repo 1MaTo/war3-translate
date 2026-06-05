@@ -9,7 +9,7 @@ export const cleanFiles = Effect.gen(function* () {
   if (debug) return;
 
   const fs = yield* FileSystem.FileSystem;
-  yield* fs.remove(RAW_DIR, { recursive: true });
-  yield* fs.remove(PARSED_DIR, { recursive: true });
-  yield* fs.remove(TRANSLATED_DIR, { recursive: true });
+  yield* fs.remove(RAW_DIR, { recursive: true, force: true });
+  yield* fs.remove(PARSED_DIR, { recursive: true, force: true });
+  yield* fs.remove(TRANSLATED_DIR, { recursive: true, force: true });
 }).pipe(Effect.catchAll(() => Effect.log("Failed to clean tmp folder :(")));
