@@ -73,6 +73,8 @@ const decodeCommon = (value: string) =>
 
 const decodeJassCommon = (value: string) =>
   value
+    .replace(/"(.*?)"/g, "「$1」")
+    .replace('"', "")
     .replace(jass.colorCode[1], " |c$1")
     .replace(jass.colorClose[1], "|r ")
     .replace(jass.multiBackslash[1], " $1")

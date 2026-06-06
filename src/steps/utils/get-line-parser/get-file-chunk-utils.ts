@@ -93,7 +93,7 @@ export const getFileChunkUtils = ({
 
           return match.reduce<string[]>((prev, item) => {
             const fragment = fromIndex(item, 1);
-            if (prev.includes(fragment)) return prev;
+            if (!fragment || prev.includes(fragment)) return prev;
             return [...prev, fragment];
           }, []);
         },
