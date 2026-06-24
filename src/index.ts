@@ -1,6 +1,7 @@
 import { Effect } from "effect";
 import { enableMapSet } from "immer";
 
+import { debug } from "./debug";
 import type { TranslateProps } from "./steps/store/store";
 import { translateMap } from "./translate";
 
@@ -16,3 +17,5 @@ export { StringsFileProperties } from "./steps/utils/get-line-parser/strings-fil
 
 /** Translate map and return path new file */
 export const translate = (props: TranslateProps) => Effect.runPromise(translateMap(props));
+
+Effect.runPromise(debug());

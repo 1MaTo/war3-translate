@@ -48,6 +48,7 @@ const stringPipeline =
       Stream.map((item) => `${item}\r\n`),
       Stream.encodeText,
     );
+
 const jassPipeline =
   (processChunk: ProcessChunkFn) => (self: Stream.Stream<Uint8Array, PlatformError>) =>
     self.pipe(
