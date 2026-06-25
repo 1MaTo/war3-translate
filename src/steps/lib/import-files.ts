@@ -18,11 +18,11 @@ const openMap = (map: Archive, path: string) =>
 
 type ExtractFilesProps = {
   map: Archive;
-} & Pick<TranslateProps, "filesToExclude" | "filesToInclude">;
+} & Pick<TranslateProps, "fileFilter">;
 
 export type ExtractedFileInfo = { name: string; extension: ExtensionToTranslate; mapPath: string };
 
-const extractFiles = ({ map, filesToExclude, filesToInclude }: ExtractFilesProps) =>
+const extractFiles = ({ map, fileFilter }: ExtractFilesProps) =>
   Effect.gen(function* () {
     yield* Effect.promise(() => mkdir(RAW_DIR, { recursive: true }));
 
@@ -31,9 +31,8 @@ const extractFiles = ({ map, filesToExclude, filesToInclude }: ExtractFilesProps
 
     for (const file of files) {
       if (file.fileSize === 0) continue;
-      if (filesToInclude && filesToInclude.length > 0 && !filesToInclude.includes(file.plainName))
-        continue;
-      if (filesToExclude && filesToExclude.includes(file.plainName)) continue;
+      if (fileFilter?.exclude && fileFilter.exclude.test(file.plainName)) continue;
+      if (fileFilter?.include && !fileFilter.include.test(file.plainName)) continue;
 
       const match = file.name.match(new RegExp(`\\.(${ExtensionToTranslate.literals.join("|")})`));
 
@@ -63,21 +62,16 @@ const extractFiles = ({ map, filesToExclude, filesToInclude }: ExtractFilesProps
 type ImportFilesProps = {
   mapPath: string;
   mapToUse?: Archive;
-} & Pick<ExtractFilesProps, "filesToExclude" | "filesToInclude">;
+} & Pick<ExtractFilesProps, "fileFilter">;
 
-export const importFiles = ({
-  mapPath,
-  mapToUse,
-  filesToExclude,
-  filesToInclude,
-}: ImportFilesProps) =>
+export const importFiles = ({ mapPath, mapToUse, fileFilter }: ImportFilesProps) =>
   Effect.gen(function* () {
     const map = mapToUse || new Archive();
 
     yield* openMap(map, mapPath);
     yield* isCanWrite(map);
 
-    const result = yield* extractFiles({ map, filesToExclude, filesToInclude });
+    const result = yield* extractFiles({ map, fileFilter });
     map.close();
 
     return result;

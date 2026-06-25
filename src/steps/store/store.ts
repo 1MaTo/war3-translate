@@ -27,6 +27,11 @@ export type ParsedFile = {
 /** Key is file name */
 export type FileMap = Map<string, ParsedFile>;
 
+export type FileFilter = {
+  include?: RegExp;
+  exclude?: RegExp;
+};
+
 export type TranslateProps = {
   pathToMap: string;
   /** Full path with map name and extension */
@@ -38,11 +43,14 @@ export type TranslateProps = {
   translateApiOptions?: DeeplOptions;
 
   /** List of file names (as they named in map, case sensitive, with extension)
-   * When specified only this files will be processed */
+   * When specified only this files will be processed
+   * @deprecated use `fileFilter` instead */
   filesToInclude?: string[];
   /** List of file names (as they named in map, case sensitive, with extension)
-   * When specified this files will not be translated even if specified in filesToInclude */
+   * When specified this files will not be translated even if specified in filesToInclude
+   * @deprecated use `fileFilter` instead */
   filesToExclude?: string[];
+  fileFilter?: FileFilter;
 
   /** List of string files properties to ignore, useful when limited by translation resources as some properties never can be never seen in game */
   propertiesToExclude?: StringsFileProperties[];

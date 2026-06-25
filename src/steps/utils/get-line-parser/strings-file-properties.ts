@@ -1,6 +1,6 @@
 import { Schema } from "effect";
 
-/** List of properties that might hold substrings for translation (not 100% coverage, might be updated) */
+/** List of properties in warcraft string files that can be translated */
 export const StringsFileProperties = Schema.Literal(
   "agility",
   "agility_hilight",

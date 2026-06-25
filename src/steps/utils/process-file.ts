@@ -68,7 +68,7 @@ const processPipeline: Record<
   [JASSExtension.literals[0]]: jassPipeline,
 };
 type ProcessChunkFn = (data: [string, number]) => Effect.Effect<string>;
-type ProcessFileProps = {
+export type ProcessFileProps = {
   extension: ExtensionToTranslate;
   fromPath: string;
   toPath: string;
@@ -81,7 +81,6 @@ export const processFile = ({ extension, processData, fromPath, toPath }: Proces
     const fs = yield* FileSystem.FileSystem;
 
     const pipeline = processPipeline[extension];
-
     const processedStream = fs.stream(fromPath).pipe(pipeline(processData));
 
     yield* Stream.run(processedStream, fs.sink(toPath));
