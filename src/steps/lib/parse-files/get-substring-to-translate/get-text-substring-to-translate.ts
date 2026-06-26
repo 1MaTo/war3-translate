@@ -57,9 +57,13 @@ export const patternReplacer = {
       to: ["</div>", "|r"],
     },
   },
+  nextDescription: {
+    from: [/,/g, '<span translate="no">{{comma}}</span>'],
+    to: ['<span translate="no">{{comma}}</span>', ","],
+  },
   newLine: {
-    from: ["|n", "<br>"],
-    to: ["<br>", "|n"],
+    from: ["|n", '<span translate="no">{{|n}}</span>'],
+    to: ['<span translate="no">{{|n}}</span>', "|n"],
   },
 } as const;
 
@@ -84,9 +88,10 @@ export const makeTextTranslateExtractor: MakeTranslateExtractor = (locale) => {
     return {
       raw,
       transformed: raw
-        .replace(...patternReplacer.colorCode.open.from)
-        .replace(...patternReplacer.colorCode.close.from)
-        .replace(...patternReplacer.newLine.from),
+        .replaceAll(...patternReplacer.colorCode.open.from)
+        .replaceAll(...patternReplacer.colorCode.close.from)
+        .replaceAll(...patternReplacer.newLine.from)
+        .replaceAll(...patternReplacer.nextDescription.from),
     };
   };
 };

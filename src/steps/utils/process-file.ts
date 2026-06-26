@@ -3,6 +3,7 @@ import { NodeContext } from "@effect/platform-node";
 import type { PlatformError } from "@effect/platform/Error";
 import { Chunk, Effect, Option, Stream } from "effect";
 
+import type { ApplyError } from "../store/error";
 import { ExtensionToTranslate, StringsExtension, JASSExtension } from "../store/extensions";
 
 /** Accumulates strings until quote count (ignores escaped quotes) is even */
@@ -39,7 +40,7 @@ const accumByEvenQuotes = (self: Stream.Stream<string, PlatformError>) =>
   );
 
 const stringPipeline =
-  (processChunk: ProcessChunkFn) => (self: Stream.Stream<Uint8Array, PlatformError>) =>
+  (processChunk: ProcessChunkFn) => (self: Stream.Stream<Uint8Array, PlatformError | ApplyError>) =>
     self.pipe(
       Stream.decodeText("utf-8"),
       Stream.splitLines,
@@ -50,7 +51,8 @@ const stringPipeline =
     );
 
 const jassPipeline =
-  (processChunk: ProcessChunkFn) => (self: Stream.Stream<Uint8Array, PlatformError>) =>
+  (processChunk: ProcessChunkFn) =>
+  (self: Stream.Stream<Uint8Array, PlatformError | ApplyError | any>) =>
     self.pipe(
       Stream.decodeText("utf-8"),
       accumByEvenQuotes,
@@ -62,12 +64,14 @@ const processPipeline: Record<
   ExtensionToTranslate,
   (
     processChunk: ProcessChunkFn,
-  ) => (self: Stream.Stream<Uint8Array, PlatformError>) => Stream.Stream<Uint8Array, PlatformError>
+  ) => (
+    self: Stream.Stream<Uint8Array, PlatformError | ApplyError>,
+  ) => Stream.Stream<Uint8Array, PlatformError | ApplyError>
 > = {
   [StringsExtension.literals[0]]: stringPipeline,
   [JASSExtension.literals[0]]: jassPipeline,
 };
-type ProcessChunkFn = (data: [string, number]) => Effect.Effect<string>;
+type ProcessChunkFn = (data: [string, number]) => Effect.Effect<string, ApplyError>;
 export type ProcessFileProps = {
   extension: ExtensionToTranslate;
   fromPath: string;

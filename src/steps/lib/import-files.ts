@@ -38,16 +38,12 @@ const extractFiles = ({ map, fileFilter }: ExtractFilesProps) =>
 
       if (!match || !match[1]) continue;
 
-      yield* Effect.logDebug(`        ${file.name} | size: ${file.fileSize}`);
+      yield* Effect.logDebug(`[Extract files] ${file.name} | size: ${file.fileSize}`);
 
       const extension = yield* Schema.decodeUnknown(ExtensionToTranslate)(match[1]);
       const fileName = file.name.replace(/\\/g, "_").toLowerCase();
       extractedFiles.push({ name: fileName, extension, mapPath: file.name });
-      /*  yield* addImportedFile(storeRef, {
-        name: fileName,
-        extension,
-        mapPath: file.name,
-      }); */
+
       map.extractFile(file.name, path.join(RAW_DIR, fileName));
     }
 

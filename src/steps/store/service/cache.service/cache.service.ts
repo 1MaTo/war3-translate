@@ -8,8 +8,8 @@ import { DB_CACHE_PATH, FILES_DIR } from "../../const";
 import { CacheError } from "../../error";
 import {
   translateTableScript,
-  type GetByHashPayload,
-  type GetByHashResult,
+  type GetByIdPayload,
+  type GetByIdResult,
   type TranslateTableCreateOrUpdatePayload,
 } from "./translate.table";
 
@@ -51,8 +51,8 @@ const initialize = Effect.gen(function* () {
   const createOrUpdateTranslation = db.prepare<TranslateTableCreateOrUpdatePayload>(
     translateTableScript.createOrUpdate,
   );
-  const getTranslationByHash = db.prepare<GetByHashPayload, GetByHashResult>(
-    translateTableScript.getByHash,
+  const getTranslationByHash = db.prepare<GetByIdPayload, GetByIdResult>(
+    translateTableScript.getById,
   );
 
   return {

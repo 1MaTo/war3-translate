@@ -42,8 +42,8 @@ export const parseFile = ({ onNewFragment, extension, name, locale }: ParseFileP
           const substring = extractTranslation(chunk);
           if (!substring) return chunk;
 
-          const id = createHash("md5").update(substring.transformed).digest("hex");
-          const newChunk = chunk.replace(substring.raw, id);
+          const id = createHash("md5").update(substring.transformed).update(locale).digest("hex");
+          const newChunk = chunk.replace(substring.raw, `<translate id="${id}"/>`);
 
           yield* onNewFragment({
             id,

@@ -8,31 +8,6 @@ import type { ExtractedFileInfo } from "../import-files";
 import type { ParsedChunk } from "./get-substring-to-translate/common";
 import { parseFile } from "./get-substring-to-translate/parser";
 
-// const parseFile = (fileInfo: ExtractedFileInfo) =>
-//   Effect.gen(function* () {
-//     /*   const storeRef = yield* TranslateStore;
-//     const { fileMap, from, to, provider } = yield* (yield* TranslateStore).get; */
-
-//     const pathFrom = path.join(RAW_DIR, fileInfo.name);
-//     const pathTo = path.join(PARSED_DIR, fileInfo.name);
-
-//     /*  const { parse, replaceByHash } = getFileChunkUtils({
-//       extension: fileInfo.extension,
-//       from: from,
-//     }); */
-
-//     /*  const preHash = createHash("md5").update(from).update(to).update(provider).digest(); */
-
-//     /* if (fragmentCount > 0) {
-//       yield* Effect.logDebug(`    ${fileInfo.mapPath}`);
-//       yield* Effect.logDebug(`        ${fragmentCount} fragments`);
-//     } else {
-//       yield* removeImportedFile(storeRef, name);
-//       yield* Effect.promise(() => rm(oldPath, { force: true }));
-//       yield* Effect.promise(() => rm(newPath, { force: true }));
-//     } */
-//   });
-
 export type ParseFilesProps = {
   extractedFiles: ExtractedFileInfo[];
   locale: TranslateFromLocale;
