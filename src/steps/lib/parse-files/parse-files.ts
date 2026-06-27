@@ -4,6 +4,7 @@ import { Effect, HashMap, Ref } from "effect";
 
 import { PARSED_DIR } from "../../store/const";
 import type { TranslateFromLocale } from "../../store/locales";
+import type { TranslateProvider } from "../../store/translate-provider";
 import type { ExtractedFileInfo } from "../import-files";
 import type { ParsedChunk } from "./get-substring-to-translate/common";
 import { parseFile } from "./get-substring-to-translate/parser";
@@ -11,9 +12,10 @@ import { parseFile } from "./get-substring-to-translate/parser";
 export type ParseFilesProps = {
   extractedFiles: ExtractedFileInfo[];
   locale: TranslateFromLocale;
+  provider: TranslateProvider;
 };
 
-export const parseFiles = ({ extractedFiles, locale }: ParseFilesProps) =>
+export const parseFiles = ({ extractedFiles, locale, provider }: ParseFilesProps) =>
   Effect.gen(function* () {
     yield* Effect.promise(() => mkdir(PARSED_DIR, { recursive: true }));
 
@@ -23,7 +25,7 @@ export const parseFiles = ({ extractedFiles, locale }: ParseFilesProps) =>
       Ref.update(ref, (map) => HashMap.set(map, data.id, data));
 
     const parseFileTaskList = extractedFiles.map((fileInfo) =>
-      parseFile({ ...fileInfo, locale, onNewFragment: onNewFragment }),
+      parseFile({ ...fileInfo, locale, onNewFragment: onNewFragment, provider }),
     );
 
     yield* Effect.all(parseFileTaskList, { concurrency: "unbounded" });

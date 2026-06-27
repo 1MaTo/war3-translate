@@ -4,11 +4,11 @@ import { Effect, HashMap, Layer, Logger, LogLevel } from "effect";
 import { applyFiles, type TranslatedChunk } from "./steps/lib/apply-files/apply-files";
 import { exportFiles } from "./steps/lib/export-files";
 import { importFiles } from "./steps/lib/import-files";
-import { patternReplacer } from "./steps/lib/parse-files/get-substring-to-translate/get-text-substring-to-translate";
+import { providerParser } from "./steps/lib/parse-files/get-substring-to-translate/get-text-substring-to-translate";
 import { parseFiles } from "./steps/lib/parse-files/parse-files";
+import type { TranslateLibProps } from "./steps/lib/props";
 import { translateList } from "./steps/lib/translate/translate-list";
 import { TranslateError } from "./steps/store/error";
-import { KO } from "./steps/store/locales";
 import { fromIndex } from "./steps/utils/from-index";
 import { SimpleLogger } from "./steps/utils/simple-logger";
 
@@ -16,20 +16,37 @@ export const debug = () =>
   Effect.gen(function* () {
     yield* Effect.log("DEBUG START");
 
-    const pathToMap = "C:\\Users\\mato\\Desktop\\MpqEditor\\maps\\FBT 1.7.2 KR47.w3x";
+    const props: TranslateLibProps = {
+      from: "ko",
+      to: "en",
+      pathToMap: "C:\\Users\\mato\\Desktop\\MpqEditor\\maps\\FBT 1.7.2 KR47.w3x",
+      pathToTranslatedMap: "M:\\game\\warcraft\\Warcraft_1.28\\Maps\\test2\\translate_test.w3x",
+      fileFilter: { include: /\.j/i },
+      provider: "google-free",
+      options: {
+        deepl: {
+          apiKey: "",
+          context: "일본 만화 영화",
+          glossary: "ec539a03-7086-4449-9a9c-033dc6380aba",
+        },
+      },
+      ignoreCache: false,
+    };
 
     const fileList = yield* importFiles({
-      mapPath: pathToMap,
-      fileFilter: {
-        include: /campaignabilitystrings/i,
-      },
+      mapPath: props.pathToMap,
+      fileFilter: props.fileFilter,
     });
-    const parsed = yield* parseFiles({ extractedFiles: fileList, locale: KO.literals[0] });
+    const parsed = yield* parseFiles({
+      extractedFiles: fileList,
+      locale: props.from,
+      provider: props.provider,
+    });
 
     const idList: string[] = [];
     const textList: string[] = [];
 
-    /*  const DEBUG_ITEM_LIMIT = 100;
+    /* const DEBUG_ITEM_LIMIT = 50;
     let DEBUG_ITEM_COUNT = 0; */
     for (const [_, item] of parsed) {
       /*  if (DEBUG_ITEM_COUNT > DEBUG_ITEM_LIMIT) break; */
@@ -39,17 +56,12 @@ export const debug = () =>
     }
 
     const translateResult = yield* translateList({
+      ignoreCache: props.ignoreCache,
       list: textList,
-      from: "ko",
-      to: "en",
-      provider: "google-free",
-      options: {
-        deepl: {
-          apiKey: "621c3fff-e066-49ec-8552-ebcc570a2260:fx",
-          context: "일본 만화 영화",
-          glossary: "ec539a03-7086-4449-9a9c-033dc6380aba",
-        },
-      },
+      from: props.from,
+      to: props.to,
+      provider: props.provider,
+      options: props.options,
     });
 
     if (textList.length !== translateResult.length)
@@ -57,32 +69,31 @@ export const debug = () =>
 
     const translated: TranslatedChunk[] = [];
 
+    const parser = providerParser[props.provider].decode;
     for (let index = 0; index < translateResult.length; index++) {
       const chunk = yield* HashMap.get(parsed, fromIndex(idList, index));
+
       const newChunk: TranslatedChunk = {
         ...chunk,
         substring: {
           ...chunk.substring,
           translated: fromIndex(translateResult, index),
-          complete: fromIndex(translateResult, index)
-            .replaceAll(...patternReplacer.colorCode.open.to)
-            .replaceAll(...patternReplacer.colorCode.close.to)
-            .replaceAll(...patternReplacer.newLine.to)
-            /** Not allowed, replace with chinese before nextDescription replace */
-            .replaceAll(/,/g, "，")
-            .replaceAll(...patternReplacer.nextDescription.to)
-            /** Not allowed, replace with chinese after all html replacement */
-            .replaceAll(/</g, "＜")
-            .replaceAll(/>/g, "＞"),
+          complete: parser(fromIndex(translateResult, index)),
         },
       };
       translated.push(newChunk);
-      /*     console.log(newChunk.id, newChunk.substring); */
+      console.log(newChunk.id, newChunk.substring);
     }
 
     yield* applyFiles({ extractedFiles: fileList, translates: translated });
 
-    yield* exportFiles({ files: fileList, pathToMap: pathToMap });
+    const newMapPath = yield* exportFiles({
+      files: fileList,
+      pathToMap: props.pathToMap,
+      pathToTranslatedMap: props.pathToTranslatedMap,
+    });
+
+    yield* Effect.log(`[Map translated] ${newMapPath}`);
 
     yield* Effect.log("DEBUG END");
   }).pipe(

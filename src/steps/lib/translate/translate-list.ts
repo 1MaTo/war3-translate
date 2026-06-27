@@ -11,21 +11,22 @@ import {
 } from "./translate-cache";
 import { translateInQueue } from "./translate-in-queue";
 
-type TranslateListProps = Pick<
+type TranslateListProps = { ignoreCache?: boolean } & Pick<
   TranslateInQueueProps,
-  "from" | "to" | "provider" | "list" | "maxCharsPerRequest" | "delay" | "options"
+  "from" | "to" | "provider" | "list" | "options"
 >;
 export const translateList = ({
   list,
   from,
   to,
   provider = GoogleFreeProvider.literals[0],
-  delay,
-  maxCharsPerRequest,
   options,
+  ignoreCache,
 }: TranslateListProps) =>
   Effect.gen(function* () {
-    const cacheResult = yield* getCachedTranslations({ list, provider, to });
+    const cacheResult = ignoreCache
+      ? Array(list.length).fill(null)
+      : yield* getCachedTranslations({ list, provider, to });
     const missItems: string[] = [];
 
     for (let index = 0; index < list.length; index++) {
@@ -45,8 +46,6 @@ export const translateList = ({
       from,
       to,
       provider,
-      delay,
-      maxCharsPerRequest,
       options,
     });
 

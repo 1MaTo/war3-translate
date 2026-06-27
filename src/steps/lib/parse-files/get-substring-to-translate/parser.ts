@@ -6,6 +6,7 @@ import { Effect } from "effect";
 import { PARSED_DIR, RAW_DIR } from "../../../store/const";
 import { ExtensionToTranslate, JASSExtension, StringsExtension } from "../../../store/extensions";
 import type { TranslateFromLocale } from "../../../store/locales";
+import type { TranslateProvider } from "../../../store/translate-provider";
 import { processFile } from "../../../utils/process-file";
 import type { ExtractedFileInfo } from "../../import-files";
 import type { MakeTranslateExtractor, ParsedChunk } from "./common";
@@ -14,6 +15,7 @@ import { makeTextTranslateExtractor } from "./get-text-substring-to-translate";
 type ParseFileProps = {
   onNewFragment: (data: ParsedChunk) => Effect.Effect<void>;
   locale: TranslateFromLocale;
+  provider: TranslateProvider;
 } & ExtractedFileInfo;
 
 const makeTranslateExtractor: Record<ExtensionToTranslate, MakeTranslateExtractor | (() => null)> =
@@ -22,9 +24,9 @@ const makeTranslateExtractor: Record<ExtensionToTranslate, MakeTranslateExtracto
     [JASSExtension.literals[0]]: () => null,
   };
 
-export const parseFile = ({ onNewFragment, extension, name, locale }: ParseFileProps) =>
+export const parseFile = ({ onNewFragment, extension, name, locale, provider }: ParseFileProps) =>
   Effect.gen(function* () {
-    const extractTranslation = makeTranslateExtractor[extension](locale);
+    const extractTranslation = makeTranslateExtractor[extension](locale, provider);
     if (!extractTranslation) {
       yield* Effect.logWarning(`[parseFile] Parse fn not found for "${extension}" extension`);
       return null;

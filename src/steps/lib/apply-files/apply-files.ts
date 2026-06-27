@@ -27,7 +27,7 @@ export const applyFiles = ({ extractedFiles, translates }: ApplyFilesProps) =>
 
     const onApplyTranslation: OnApplyTranslation = (data: ApplyChunk) =>
       Effect.gen(function* () {
-        const newChunk = data.chunk;
+        let newChunk = data.chunk;
         for (let index = 0; index < data.tags.length; index++) {
           const tag = fromIndex(data.tags, index);
           const translation = translates.find((item) => item.id === tag.id);
@@ -35,7 +35,7 @@ export const applyFiles = ({ extractedFiles, translates }: ApplyFilesProps) =>
           if (!translation)
             return yield* new ApplyError(`Translation not found for fragment ${tag.full}`);
 
-          newChunk.replace(tag.full, translation?.substring.translated);
+          newChunk = newChunk.replace(tag.full, translation?.substring.complete);
         }
         return newChunk;
       });

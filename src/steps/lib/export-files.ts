@@ -7,10 +7,10 @@ import { Effect } from "effect";
 
 import { TRANSLATED_DIR } from "../store/const";
 import { ApplyError } from "../store/error";
-import type { TranslateProps } from "../store/store";
 import type { ExtractedFileInfo } from "./import-files";
+import type { TranslateLibProps } from "./props";
 
-type CloneMapProps = Pick<TranslateProps, "pathToMap" | "pathToTranslatedMap">;
+type CloneMapProps = Pick<TranslateLibProps, "pathToMap" | "pathToTranslatedMap">;
 
 const cloneMap = ({ pathToMap, pathToTranslatedMap }: CloneMapProps) =>
   Effect.gen(function* () {

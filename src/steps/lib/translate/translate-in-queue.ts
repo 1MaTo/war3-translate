@@ -15,13 +15,32 @@ const translateFnMap: Record<TranslateProvider, MakeTranslateApiFn> = {
   [DeeplProvider.literals[0]]: translateDeepl,
 } as const;
 
+type RateLimitOptions = {
+  getCost: (chunk: string) => number;
+  maxCost: number;
+  delay: number;
+};
+
+const rateLimitByProvider: Record<TranslateProvider, RateLimitOptions> = {
+  /** No more than 10000 chars in total */
+  [GoogleFreeProvider.literals[0]]: {
+    getCost: (chunk) => chunk.length,
+    maxCost: 10000,
+    delay: 1000,
+  },
+  /** No for that 40 separate items */
+  [DeeplProvider.literals[0]]: {
+    getCost: () => 1,
+    maxCost: 40,
+    delay: 300,
+  },
+};
+
 export const translateInQueue = ({
   list,
   from,
   to,
   provider = GoogleFreeProvider.literals[0],
-  maxCharsPerRequest = 50000,
-  delay = 300,
   options,
 }: TranslateInQueueProps) =>
   Effect.gen(function* () {
@@ -29,12 +48,14 @@ export const translateInQueue = ({
     if (!translateFn)
       return yield* new TranslateError(`No translate function found for "${provider}" provider`);
 
+    const { delay, getCost, maxCost } = rateLimitByProvider[provider];
+
     const stream = Stream.fromIterable(list).pipe(
       Stream.transduce(
         Sink.foldWeighted({
           initial: Chunk.empty<string>(),
-          maxCost: maxCharsPerRequest,
-          cost: (_, fragment) => fragment.length,
+          maxCost: maxCost,
+          cost: (_, fragment) => getCost(fragment),
           body: (group, fragment) => Chunk.append(group, fragment),
         }),
       ),

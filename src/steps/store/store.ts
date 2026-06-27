@@ -1,6 +1,7 @@
 import { Archive } from "@jamiephan/stormlib";
 import { Context, Ref } from "effect";
 
+import type { ProviderOptions } from "../lib/translate/common";
 import type { StringsFileProperties } from "../utils/get-line-parser/strings-file-properties";
 import type { ExtensionToTranslate } from "./extensions";
 import type { TranslateFromLocale, TranslateToLocale } from "./locales";
@@ -27,11 +28,6 @@ export type ParsedFile = {
 /** Key is file name */
 export type FileMap = Map<string, ParsedFile>;
 
-export type FileFilter = {
-  include?: RegExp;
-  exclude?: RegExp;
-};
-
 export type TranslateProps = {
   pathToMap: string;
   /** Full path with map name and extension */
@@ -39,7 +35,10 @@ export type TranslateProps = {
   from: TranslateFromLocale;
   to: TranslateToLocale;
   provider?: TranslateProvider;
-  /** Api specific options for translations, context, glossary, auth key, etc... */
+  options?: ProviderOptions;
+  /** Api specific options for translations, context, glossary, auth key, etc...
+   * @deprecated
+   */
   translateApiOptions?: DeeplOptions;
 
   /** List of file names (as they named in map, case sensitive, with extension)
@@ -52,7 +51,9 @@ export type TranslateProps = {
   filesToExclude?: string[];
   fileFilter?: FileFilter;
 
-  /** List of string files properties to ignore, useful when limited by translation resources as some properties never can be never seen in game */
+  /** List of string files properties to ignore, useful when limited by translation resources as some properties never can be never seen in game
+   * @deprecated
+   */
   propertiesToExclude?: StringsFileProperties[];
   /** If true, tmp folder with files will not be deleted */
   debug?: boolean;

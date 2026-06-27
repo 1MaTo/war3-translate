@@ -7,8 +7,8 @@ import { Effect, Schema } from "effect";
 import { RAW_DIR } from "../store/const";
 import { ImportError } from "../store/error";
 import { ExtensionToTranslate } from "../store/extensions";
-import type { TranslateProps } from "../store/store";
 import { isCanWrite } from "../utils/is-can-write";
+import type { TranslateLibProps } from "./props";
 
 const openMap = (map: Archive, path: string) =>
   Effect.try({
@@ -18,7 +18,7 @@ const openMap = (map: Archive, path: string) =>
 
 type ExtractFilesProps = {
   map: Archive;
-} & Pick<TranslateProps, "fileFilter">;
+} & Pick<TranslateLibProps, "fileFilter">;
 
 export type ExtractedFileInfo = { name: string; extension: ExtensionToTranslate; mapPath: string };
 

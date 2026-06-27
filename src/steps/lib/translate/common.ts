@@ -1,14 +1,12 @@
 import { Schema } from "effect";
 
-import type { TranslateProps } from "../../store/store";
 import type { DeeplProvider } from "../../store/translate-provider";
+import type { TranslateLibProps } from "../props";
 
 export type TranslateInQueueProps = {
   list: string[];
-  maxCharsPerRequest?: number;
-  delay?: number;
   options?: ProviderOptions;
-} & Pick<TranslateProps, "from" | "to" | "provider">;
+} & Pick<TranslateLibProps, "from" | "to" | "provider">;
 
 export const DeeplOptions = Schema.Struct({
   apiKey: Schema.String,
