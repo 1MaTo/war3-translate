@@ -7,13 +7,15 @@ import { PARSED_DIR, RAW_DIR } from "../../../store/const";
 import { ExtensionToTranslate, JASSExtension, StringsExtension } from "../../../store/extensions";
 import type { TranslateFromLocale } from "../../../store/locales";
 import type { TranslateProvider } from "../../../store/translate-provider";
+import { fromIndex } from "../../../utils/from-index";
 import { processFile } from "../../../utils/process-file";
 import type { ExtractedFileInfo } from "../../import-files";
-import type { MakeTranslateExtractor, ParsedChunk } from "./common";
+import type { MakeTranslateExtractor, ParsedSubstring } from "./common";
+import { makeCodeTranslateExtractor } from "./get-code-substring-to-translate";
 import { makeTextTranslateExtractor } from "./get-text-substring-to-translate";
 
 type ParseFileProps = {
-  onNewFragment: (data: ParsedChunk) => Effect.Effect<void>;
+  onNewFragment: (data: ParsedSubstring) => Effect.Effect<void>;
   locale: TranslateFromLocale;
   provider: TranslateProvider;
 } & ExtractedFileInfo;
@@ -21,7 +23,7 @@ type ParseFileProps = {
 const makeTranslateExtractor: Record<ExtensionToTranslate, MakeTranslateExtractor | (() => null)> =
   {
     [StringsExtension.literals[0]]: makeTextTranslateExtractor,
-    [JASSExtension.literals[0]]: () => null,
+    [JASSExtension.literals[0]]: makeCodeTranslateExtractor,
   };
 
 export const parseFile = ({ onNewFragment, extension, name, locale, provider }: ParseFileProps) =>
@@ -41,17 +43,17 @@ export const parseFile = ({ onNewFragment, extension, name, locale, provider }: 
       toPath,
       processData: ([chunk]) =>
         Effect.gen(function* () {
-          const substring = extractTranslation(chunk);
-          if (!substring) return chunk;
+          const substringList = extractTranslation(chunk);
+          if (!substringList) return chunk;
 
-          const id = createHash("md5").update(substring.transformed).update(locale).digest("hex");
-          const newChunk = chunk.replace(substring.raw, `<translate id="${id}"/>`);
+          let newChunk = chunk;
 
-          yield* onNewFragment({
-            id,
-            chunk: newChunk,
-            substring,
-          });
+          for (let index = 0; index < substringList.length; index++) {
+            const substring = fromIndex(substringList, index);
+            const id = createHash("md5").update(substring.transformed).update(locale).digest("hex");
+            newChunk = newChunk.replaceAll(substring.raw, `<translate id="${id}"/>`);
+            yield* onNewFragment({ id, chunk: newChunk, ...substring });
+          }
 
           return newChunk;
         }),

@@ -6,8 +6,60 @@ import { Chunk, Effect, Option, Stream } from "effect";
 import type { ApplyError } from "../store/error";
 import { ExtensionToTranslate, StringsExtension, JASSExtension } from "../store/extensions";
 
-/** Accumulates strings until quote count (ignores escaped quotes) is even */
-const accumByEvenQuotes = (self: Stream.Stream<string, PlatformError>) =>
+const isIncompleteFunctionCall = (chunk: string) => {
+  const callRegex = new RegExp(`[A-Za-z_]w*(?=\\s*\\()`, "g");
+
+  while (callRegex.exec(chunk) !== null) {
+    let lastIndex = callRegex.lastIndex;
+    while (chunk[lastIndex] !== "(" && lastIndex < chunk.length) lastIndex++;
+    if (chunk[lastIndex] !== "(") continue;
+
+    let depth = 0;
+    let inString = false;
+    let complete = false;
+    let index = lastIndex;
+
+    for (; index < chunk.length; index++) {
+      const char = chunk[index];
+      if (inString) {
+        if (char === "\\") {
+          index++;
+          continue;
+        }
+        if (char === '"') inString = false;
+        continue;
+      }
+      if (char === '"') {
+        inString = true;
+        continue;
+      }
+      if (char === "(") {
+        depth++;
+        continue;
+      }
+      if (char === ")") {
+        depth--;
+        if (depth === 0) {
+          complete = true;
+          index++;
+          break;
+        }
+      }
+    }
+
+    /** If any function found but not complete, we cannot process chunk */
+    if (!complete) {
+      return true;
+    }
+
+    callRegex.lastIndex = Math.max(callRegex.lastIndex, complete ? index : chunk.length);
+  }
+
+  return false;
+};
+
+/** Accumulates strings in code to detect functions that contain user strings */
+const accumCodeChunk = (self: Stream.Stream<string, PlatformError>) =>
   Stream.unwrapScoped(
     Effect.gen(function* () {
       const getNextChunk = Effect.option(yield* Stream.toPull(self));
@@ -27,10 +79,19 @@ const accumByEvenQuotes = (self: Stream.Stream<string, PlatformError>) =>
 
           const newBuffer = Chunk.appendAll(buffer, newChunk);
           const bufferAsString = Chunk.join(newBuffer, "");
-          const quoteCount = (bufferAsString.match(/(?<=(?:^|[^\\])(?:\\{2})*)"/g) || []).length;
+          const splitByLastNewLine = (chunk: string): [string, string] => {
+            const lastLineIndex = chunk.lastIndexOf("\n");
+            if (lastLineIndex === -1) return [chunk, ""];
+            return [chunk.slice(0, lastLineIndex + 1), chunk.slice(lastLineIndex + 1)];
+          };
+          const [chunkBeforeLastLine, other] = splitByLastNewLine(bufferAsString);
+          const isCanProcessChunk = !isIncompleteFunctionCall(chunkBeforeLastLine);
 
-          if (quoteCount % 2 === 0) {
-            return Option.some([Chunk.of(bufferAsString), Chunk.empty<string>()] as const);
+          if (isCanProcessChunk) {
+            return Option.some([
+              Chunk.of(chunkBeforeLastLine),
+              other ? Chunk.of(other) : Chunk.empty<string>(),
+            ] as const);
           }
 
           return Option.some([Chunk.empty<string>(), newBuffer] as const);
@@ -55,7 +116,7 @@ const jassPipeline =
   (self: Stream.Stream<Uint8Array, PlatformError | ApplyError | any>) =>
     self.pipe(
       Stream.decodeText("utf-8"),
-      accumByEvenQuotes,
+      accumCodeChunk,
       Stream.zipWithIndex,
       Stream.mapEffect(processChunk),
       Stream.encodeText,

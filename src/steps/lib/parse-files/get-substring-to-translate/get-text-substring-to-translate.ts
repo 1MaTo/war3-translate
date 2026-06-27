@@ -68,9 +68,11 @@ export const makeTextTranslateExtractor: MakeTranslateExtractor = (locale, provi
     const raw = line.match(matcher)?.[1];
     if (!raw) return null;
 
-    return {
-      raw,
-      transformed: parser(raw),
-    };
+    return [
+      {
+        raw,
+        transformed: parser(raw),
+      },
+    ];
   };
 };
