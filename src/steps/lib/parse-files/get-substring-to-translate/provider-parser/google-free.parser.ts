@@ -1,3 +1,4 @@
+import { JASSExtension, StringsExtension } from "../../../../store/extensions";
 import type { ProviderStringParser } from "../common";
 
 /**
@@ -25,25 +26,60 @@ export const patternReplacer = {
     from: ["|n", ' <span translate="no">{{|n}}</span> '],
     to: [/\s*<span\s*translate="no"\s*>{{\|n}}<\/span>\s*/gi, "|n"],
   },
+  defaultNewLine: {
+    from: ["\n", ' <span translate="no" >{{newLine}}</span> '],
+    to: [/\s*<span\s*translate="no"\s*>{{newLine}}<\/span>\s*/gi, "\n"],
+  },
+  inCodeColorCode: {
+    open: {
+      from: [/\|c([A-Fa-f0-9]{8})/gi, " <$1> "],
+      to: [/\s*<([A-Fa-f0-9]{8})>\s*/gi, "|c$1"],
+    },
+    close: {
+      from: [/\|r/gi, " <R> "],
+      to: [/\s*<R>\s*/gi, "|r"],
+    },
+  },
+  codeRepeatedBackslash: {
+    from: [/((?:\\){3,})/gi, "[[$1]]"],
+    to: [/\[\[((?:\\){3,})\]\]/gi, "$1"],
+  },
 } as const;
 
 export const googleFreeParser: ProviderStringParser = {
-  encode: (value) =>
-    value
-      .replaceAll(...patternReplacer.colorCode.open.from)
-      .replaceAll(...patternReplacer.colorCode.close.from)
-      .replaceAll(...patternReplacer.newLine.from)
-      .replaceAll(...patternReplacer.nextDescription.from),
+  [StringsExtension.literals[0]]: {
+    encode: (value) =>
+      value
+        .replaceAll(...patternReplacer.colorCode.open.from)
+        .replaceAll(...patternReplacer.colorCode.close.from)
+        .replaceAll(...patternReplacer.newLine.from)
+        .replaceAll(...patternReplacer.nextDescription.from),
 
-  decode: (value) =>
-    value
-      .replaceAll(...patternReplacer.colorCode.open.to)
-      .replaceAll(...patternReplacer.colorCode.close.to)
-      .replaceAll(...patternReplacer.newLine.to)
-      /** Not allowed, replace with chinese before nextDescription replace */
-      .replaceAll(/,/g, "，")
-      .replaceAll(...patternReplacer.nextDescription.to)
-      /** Not allowed, replace with chinese after all html replacement */
-      .replaceAll(/</g, "＜")
-      .replaceAll(/>/g, "＞"),
+    decode: (value) =>
+      value
+        .replaceAll(...patternReplacer.colorCode.open.to)
+        .replaceAll(...patternReplacer.colorCode.close.to)
+        .replaceAll(...patternReplacer.newLine.to)
+        /** Not allowed, replace with chinese before nextDescription replace */
+        .replaceAll(/,/g, "，")
+        .replaceAll(...patternReplacer.nextDescription.to)
+        /** Not allowed, replace with chinese after all html replacement */
+        .replaceAll(/</g, "＜")
+        .replaceAll(/>/g, "＞"),
+  },
+  [JASSExtension.literals[0]]: {
+    encode: (value) =>
+      value
+        .replaceAll(...patternReplacer.inCodeColorCode.open.from)
+        .replaceAll(...patternReplacer.inCodeColorCode.close.from)
+        .replaceAll(...patternReplacer.defaultNewLine.from)
+        .replaceAll(...patternReplacer.codeRepeatedBackslash.from),
+    decode: (value) =>
+      value
+        .replaceAll(...patternReplacer.inCodeColorCode.open.to)
+        .replaceAll(...patternReplacer.inCodeColorCode.close.to)
+        .replaceAll(...patternReplacer.defaultNewLine.to)
+        .replaceAll(...patternReplacer.codeRepeatedBackslash.to)
+        .replaceAll(/"(.*?)"/gi, "“$1”"),
+  },
 };

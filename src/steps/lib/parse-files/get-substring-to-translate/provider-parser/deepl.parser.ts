@@ -1,3 +1,4 @@
+import { JASSExtension, StringsExtension } from "../../../../store/extensions";
 import type { ProviderStringParser } from "../common";
 
 export const patternReplacer = {
@@ -22,26 +23,32 @@ export const patternReplacer = {
 } as const;
 
 export const deeplParser: ProviderStringParser = {
-  encode: (value) =>
-    value
-      .replaceAll(...patternReplacer.colorCode.open.from)
-      .replaceAll(...patternReplacer.colorCode.close.from)
-      .replaceAll(...patternReplacer.newLine.from)
-      .replaceAll(...patternReplacer.nextDescription.from),
+  [StringsExtension.literals[0]]: {
+    encode: (value) =>
+      value
+        .replaceAll(...patternReplacer.colorCode.open.from)
+        .replaceAll(...patternReplacer.colorCode.close.from)
+        .replaceAll(...patternReplacer.newLine.from)
+        .replaceAll(...patternReplacer.nextDescription.from),
 
-  decode: (value) =>
-    value
-      .replaceAll(...patternReplacer.colorCode.open.to)
-      .replaceAll(...patternReplacer.colorCode.close.to)
-      .replaceAll(...patternReplacer.newLine.to)
-      /** Not allowed, replace with chinese before nextDescription replace */
-      .replaceAll(/,/g, "，")
-      .replaceAll(...patternReplacer.nextDescription.to)
-      /** Not allowed, replace with chinese after all html replacement */
-      .replaceAll(/</g, "＜")
-      .replaceAll(/>/g, "＞")
-      /** Deepl replace 「」with &quot; */
-      .replaceAll(/&quot;(.*?)&quot;/g, "「$1」")
-      /** Deepl replace ' with &#x27; */
-      .replaceAll(/&#x27;/g, "'"),
+    decode: (value) =>
+      value
+        .replaceAll(...patternReplacer.colorCode.open.to)
+        .replaceAll(...patternReplacer.colorCode.close.to)
+        .replaceAll(...patternReplacer.newLine.to)
+        /** Not allowed, replace with chinese before nextDescription replace */
+        .replaceAll(/,/g, "，")
+        .replaceAll(...patternReplacer.nextDescription.to)
+        /** Not allowed, replace with chinese after all html replacement */
+        .replaceAll(/</g, "＜")
+        .replaceAll(/>/g, "＞")
+        /** Deepl replace 「」with &quot; */
+        .replaceAll(/&quot;(.*?)&quot;/g, "「$1」")
+        /** Deepl replace ' with &#x27; */
+        .replaceAll(/&#x27;/g, "'"),
+  },
+  [JASSExtension.literals[0]]: {
+    encode: (value) => value,
+    decode: (value) => value,
+  },
 };

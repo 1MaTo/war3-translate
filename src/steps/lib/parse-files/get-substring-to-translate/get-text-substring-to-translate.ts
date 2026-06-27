@@ -58,12 +58,12 @@ export const providerParser: Record<TranslateProvider, ProviderStringParser> = {
   [DeeplProvider.literals[0]]: deeplParser,
 };
 
-export const makeTextTranslateExtractor: MakeTranslateExtractor = (locale, provider) => {
+export const makeTextTranslateExtractor: MakeTranslateExtractor = ({ locale, provider }) => {
   const matcher = new RegExp(
     `^(?:${validProperty.join("|")})=(.*${localeMatch[locale]}+.*)$`,
     "iu",
   );
-  const parser = providerParser[provider].encode;
+  const parser = providerParser[provider].txt.encode;
   return (line) => {
     const raw = line.match(matcher)?.[1];
     if (!raw) return null;

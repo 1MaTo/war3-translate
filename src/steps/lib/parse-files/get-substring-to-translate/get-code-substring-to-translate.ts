@@ -24,10 +24,18 @@ type JASSFunctionInfo = {
   args: number[];
 };
 
-const JASSFunctionInfoList: JASSFunctionInfo[] = [{ name: "CreateQuestBJ", args: [1, 2] }];
+const JASSFunctionInfoList: JASSFunctionInfo[] = [
+  { name: "CreateQuestBJ", args: [1, 2] },
+  { name: "DisplayTimedTextToForce", args: [2] },
+  { name: "DisplayTextToPlayer", args: [3] },
+  { name: "DzFrameSetText", args: [1] },
+  { name: "DisplayTimedTextToPlayer", args: [4] },
+  { name: "SaveStr", args: [3] },
+];
 
-export const makeCodeTranslateExtractor: MakeTranslateExtractor = (locale, _) => {
+export const makeCodeTranslateExtractor: MakeTranslateExtractor = ({ locale, provider }) => {
   const localeMatcher = new RegExp(`.*${localeMatch[locale]}.*`, "iu");
+  const parser = providerParser[provider].j.encode;
   return (chunk) => {
     const substringList: ExtractedSubstring[] = [];
 
@@ -40,7 +48,7 @@ export const makeCodeTranslateExtractor: MakeTranslateExtractor = (locale, _) =>
         functionName: fnInfo.name,
       });
 
-      if (args.length === 0) return null;
+      if (args.length === 0) continue;
 
       for (let index = 0; index < args.length; index++) {
         const fnArgsList = fromIndex(args, index);
@@ -48,18 +56,28 @@ export const makeCodeTranslateExtractor: MakeTranslateExtractor = (locale, _) =>
           const arg = fromIndex(fnArgsList, index);
           if (!arg) {
             console.warn(
-              `[makeCodeTranslateExtractor] Some arg ${index} for function ${"CreateQuestBJ"} is undefined`,
+              `[makeCodeTranslateExtractor] Some arg ${index} for function ${fnInfo.name} is undefined`,
             );
             continue;
           }
 
-          /** Take item only when there are anything to translate */
-          if (!arg.match(localeMatcher)) continue;
+          const multiString: string[] = [];
+          for (const match of arg.matchAll(/"(.*?)"/g)) {
+            if (match[1]) multiString.push(match[1]);
+          }
+          const stringsFromArg = multiString.length > 0 ? multiString : [arg];
 
-          /** Prevent duplicates, all occurrences will be replaced anyway */
-          if (substringList.some((item) => item.raw === arg)) continue;
+          for (let index = 0; index < stringsFromArg.length; index++) {
+            const finalString = fromIndex(stringsFromArg, index);
 
-          substringList.push({ raw: arg, transformed: arg });
+            /** Take item only when there are anything to translate */
+            if (!finalString.match(localeMatcher)) continue;
+
+            /** Prevent duplicates, all occurrences will be replaced anyway */
+            if (substringList.some((item) => item.raw === finalString)) continue;
+
+            substringList.push({ raw: finalString, transformed: parser(finalString) });
+          }
         }
       }
     }

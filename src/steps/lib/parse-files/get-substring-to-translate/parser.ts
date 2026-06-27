@@ -28,7 +28,7 @@ const makeTranslateExtractor: Record<ExtensionToTranslate, MakeTranslateExtracto
 
 export const parseFile = ({ onNewFragment, extension, name, locale, provider }: ParseFileProps) =>
   Effect.gen(function* () {
-    const extractTranslation = makeTranslateExtractor[extension](locale, provider);
+    const extractTranslation = makeTranslateExtractor[extension]({ locale, provider });
     if (!extractTranslation) {
       yield* Effect.logWarning(`[parseFile] Parse fn not found for "${extension}" extension`);
       return null;
@@ -51,8 +51,8 @@ export const parseFile = ({ onNewFragment, extension, name, locale, provider }: 
           for (let index = 0; index < substringList.length; index++) {
             const substring = fromIndex(substringList, index);
             const id = createHash("md5").update(substring.transformed).update(locale).digest("hex");
-            newChunk = newChunk.replaceAll(substring.raw, `<translate id="${id}"/>`);
-            yield* onNewFragment({ id, chunk: newChunk, ...substring });
+            newChunk = newChunk.replaceAll(`"${substring.raw}"`, `"<translate id="${id}"/>"`);
+            yield* onNewFragment({ id, chunk: newChunk, extension, ...substring });
           }
 
           return newChunk;

@@ -26,8 +26,12 @@ export type ApplyChunk = {
 
 const extractTranslateTags = (chunk: string): ApplyChunk | null => {
   const tags: ApplyTag[] = [];
+  const pushedIds = new Set<string>();
   for (const match of chunk.matchAll(/<translate id="(.*?)"\/>/gi)) {
-    tags.push({ id: match[1] as string, full: match[0] as string });
+    const id = match[1] as string;
+    if (pushedIds.has(id)) continue;
+    tags.push({ id: id, full: match[0] as string });
+    pushedIds.add(id);
   }
 
   if (tags.length === 0) return null;

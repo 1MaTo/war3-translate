@@ -6,15 +6,10 @@ import { TRANSLATED_DIR } from "../../store/const";
 import { ApplyError } from "../../store/error";
 import { fromIndex } from "../../utils/from-index";
 import type { ExtractedFileInfo } from "../import-files";
-import type {
-  ParsedChunk,
-  ParsedSubstring,
-} from "../parse-files/get-substring-to-translate/common";
+import type { ParsedSubstring } from "../parse-files/get-substring-to-translate/common";
 import { applyFile, type ApplyChunk, type OnApplyTranslation } from "./apply-file";
 
-export type TranslatedChunk = Omit<ParsedChunk, "substring"> & {
-  substring: ParsedSubstring & { translated: string; complete: string };
-};
+export type TranslatedChunk = ParsedSubstring & { translated: string; complete: string };
 
 export type ApplyFilesProps = {
   extractedFiles: ExtractedFileInfo[];
@@ -35,7 +30,7 @@ export const applyFiles = ({ extractedFiles, translates }: ApplyFilesProps) =>
           if (!translation)
             return yield* new ApplyError(`Translation not found for fragment ${tag.full}`);
 
-          newChunk = newChunk.replace(tag.full, translation?.substring.complete);
+          newChunk = newChunk.replaceAll(tag.full, translation?.complete);
         }
         return newChunk;
       });
