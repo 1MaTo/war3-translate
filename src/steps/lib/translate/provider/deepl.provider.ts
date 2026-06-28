@@ -29,6 +29,7 @@ export const translateDeepl: MakeTranslateApiFn = (options) => {
       ...props,
       tagHandling: "html",
       preserveFormatting: true,
+      tagHandlingVersion: "v2",
     });
     const result: string[] = [];
     for (let index = 0; index < deeplResult.length; index++) {

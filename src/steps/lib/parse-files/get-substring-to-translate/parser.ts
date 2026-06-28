@@ -51,7 +51,21 @@ export const parseFile = ({ onNewFragment, extension, name, locale, provider }: 
           for (let index = 0; index < substringList.length; index++) {
             const substring = fromIndex(substringList, index);
             const id = createHash("md5").update(substring.transformed).update(locale).digest("hex");
-            newChunk = newChunk.replaceAll(`"${substring.raw}"`, `"<translate id="${id}"/>"`);
+
+            switch (extension) {
+              case StringsExtension.literals[0]:
+                newChunk = newChunk.replaceAll(substring.raw, `<translate id="${id}"/>`);
+                break;
+
+              case JASSExtension.literals[0]:
+                newChunk = newChunk.replaceAll(`"${substring.raw}"`, `"<translate id="${id}"/>"`);
+                break;
+
+              default:
+                extension satisfies never;
+                break;
+            }
+
             yield* onNewFragment({ id, chunk: newChunk, extension, ...substring });
           }
 

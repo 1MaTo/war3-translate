@@ -5,11 +5,11 @@ export const patternReplacer = {
   colorCode: {
     open: {
       from: [/\|c([A-Fa-f0-9]{8})/gi, '<div data-color="$1">'],
-      to: [/\s*<div data-color="([A-Fa-f0-9]{8})">\s*/gi, "|c$1"],
+      to: [/<div data-color="([A-Fa-f0-9]{8})">/gi, "|c$1"],
     },
     close: {
       from: [/\|r/gi, "</div>"],
-      to: [/\s*<\/div>\s*/gi, "|r"],
+      to: [/<\/div>/gi, "|r"],
     },
   },
   nextDescription: {
@@ -20,6 +20,10 @@ export const patternReplacer = {
     from: ["|n", '<span translate="no">{{|n}}</span>'],
     to: [/\s*<span translate="no">{{\|n}}<\/span>\s*/gi, "|n"],
   },
+  defaultNewLine: {
+    from: ["\n", '<span translate="no">{{newLine}}</span>'],
+    to: [/\s*<span translate="no">{{newLine}}<\/span>\s*/gi, "\n"],
+  },
 } as const;
 
 export const deeplParser: ProviderStringParser = {
@@ -29,7 +33,8 @@ export const deeplParser: ProviderStringParser = {
         .replaceAll(...patternReplacer.colorCode.open.from)
         .replaceAll(...patternReplacer.colorCode.close.from)
         .replaceAll(...patternReplacer.newLine.from)
-        .replaceAll(...patternReplacer.nextDescription.from),
+        .replaceAll(...patternReplacer.nextDescription.from)
+        .trim(),
 
     decode: (value) =>
       value
@@ -48,7 +53,26 @@ export const deeplParser: ProviderStringParser = {
         .replaceAll(/&#x27;/g, "'"),
   },
   [JASSExtension.literals[0]]: {
-    encode: (value) => value,
-    decode: (value) => value,
+    encode: (value) =>
+      value
+        .replaceAll(...patternReplacer.colorCode.open.from)
+        .replaceAll(...patternReplacer.colorCode.close.from)
+        .replaceAll(...patternReplacer.defaultNewLine.from),
+
+    decode: (value) =>
+      value
+        .replaceAll(...patternReplacer.colorCode.open.to)
+        .replaceAll(...patternReplacer.colorCode.close.to)
+        .replaceAll(...patternReplacer.defaultNewLine.to)
+
+        /** Parse html codes */
+        .replaceAll(/&#x27;/g, "'")
+        .replaceAll("&quot;", '\\"')
+        .replaceAll("&amp;", "&")
+        .replaceAll("&lt;", "<")
+        .replaceAll("&gt;", ">")
+
+        .replaceAll(/(?<!\\)"/g, '\\"')
+        .replaceAll(/\s{2,}/g, " "),
   },
 };

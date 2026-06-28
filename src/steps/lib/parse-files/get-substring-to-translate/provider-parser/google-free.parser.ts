@@ -11,7 +11,7 @@ export const patternReplacer = {
   colorCode: {
     open: {
       from: [/\|c([A-Fa-f0-9]{8})/gi, ' <div data-color="$1"> '],
-      to: [/\s*<div\s*data-color="([A-Fa-f0-9]{8})"\s*>\s*/gi, "|c$1"],
+      to: [/<div\s*data-color="([A-Fa-f0-9]{8})"\s*>/gi, "|c$1"],
     },
     close: {
       from: [/\|r/gi, " </div> "],
@@ -20,7 +20,7 @@ export const patternReplacer = {
   },
   nextDescription: {
     from: [/,/g, ' <span translate="no">{{comma}}</span> '],
-    to: [/\s*<span\s*translate="no"\s*>{{comma}}<\/span>\s*/gi, ","],
+    to: [/<span\s*translate="no"\s*>{{comma}}<\/span>/gi, ","],
   },
   newLine: {
     from: ["|n", ' <span translate="no">{{|n}}</span> '],
@@ -33,16 +33,16 @@ export const patternReplacer = {
   inCodeColorCode: {
     open: {
       from: [/\|c([A-Fa-f0-9]{8})/gi, " <$1> "],
-      to: [/\s*<([A-Fa-f0-9]{8})>\s*/gi, "|c$1"],
+      to: [/<([A-Fa-f0-9]{8})>/gi, "|c$1"],
     },
     close: {
       from: [/\|r/gi, " <R> "],
-      to: [/\s*<R>\s*/gi, "|r"],
+      to: [/<R>/gi, "|r"],
     },
   },
-  codeRepeatedBackslash: {
-    from: [/((?:\\){3,})/gi, "[[$1]]"],
-    to: [/\[\[((?:\\){3,})\]\]/gi, "$1"],
+  quotes: {
+    from: ["&quot;", "[[quote]]"],
+    to: ["[[quote]]", "&quot;"],
   },
 } as const;
 
@@ -53,7 +53,8 @@ export const googleFreeParser: ProviderStringParser = {
         .replaceAll(...patternReplacer.colorCode.open.from)
         .replaceAll(...patternReplacer.colorCode.close.from)
         .replaceAll(...patternReplacer.newLine.from)
-        .replaceAll(...patternReplacer.nextDescription.from),
+        .replaceAll(...patternReplacer.nextDescription.from)
+        .trim(),
 
     decode: (value) =>
       value
@@ -65,7 +66,8 @@ export const googleFreeParser: ProviderStringParser = {
         .replaceAll(...patternReplacer.nextDescription.to)
         /** Not allowed, replace with chinese after all html replacement */
         .replaceAll(/</g, "＜")
-        .replaceAll(/>/g, "＞"),
+        .replaceAll(/>/g, "＞")
+        .replaceAll(/\s{2,}/g, " "),
   },
   [JASSExtension.literals[0]]: {
     encode: (value) =>
@@ -73,13 +75,19 @@ export const googleFreeParser: ProviderStringParser = {
         .replaceAll(...patternReplacer.inCodeColorCode.open.from)
         .replaceAll(...patternReplacer.inCodeColorCode.close.from)
         .replaceAll(...patternReplacer.defaultNewLine.from)
-        .replaceAll(...patternReplacer.codeRepeatedBackslash.from),
+        .replaceAll(...patternReplacer.quotes.from),
+    /*  .replaceAll(...patternReplacer.codeRepeatedBackslash.from), */
     decode: (value) =>
       value
         .replaceAll(...patternReplacer.inCodeColorCode.open.to)
         .replaceAll(...patternReplacer.inCodeColorCode.close.to)
         .replaceAll(...patternReplacer.defaultNewLine.to)
-        .replaceAll(...patternReplacer.codeRepeatedBackslash.to)
-        .replaceAll(/"(.*?)"/gi, "“$1”"),
+        .replaceAll(...patternReplacer.quotes.to)
+        .replace(/(\\{5,})/gi, "")
+        /* .replaceAll(...patternReplacer.codeRepeatedBackslash.to) */
+        .replaceAll(/"(.*?)"/gi, "“$1”")
+        .replaceAll("&quot;", '\\"')
+        .replaceAll(/(?<!\\)"/g, '\\"')
+        .replaceAll(/\s{2,}/g, " "),
   },
 };

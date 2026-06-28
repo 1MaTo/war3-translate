@@ -19,8 +19,9 @@ export const debug = () =>
     const props: TranslateLibProps = {
       from: "ko",
       to: "en",
-      pathToMap: "C:\\Users\\mato\\Desktop\\MpqEditor\\maps\\FBT 1.7.2 KR47.w3x",
-      pathToTranslatedMap: "M:\\game\\warcraft\\Warcraft_1.28\\Maps\\test2\\translate_test.w3x",
+      pathToMap: "M:\\game\\warcraft\\Warcraft_1.28\\Maps\\test2\\translate_test.w3x",
+      pathToTranslatedMap:
+        "M:\\game\\warcraft\\Warcraft_1.28\\Maps\\test2\\translate_test_complete.w3x",
       fileFilter: { include: /\.j/i },
       provider: "google-free",
       options: {
@@ -83,14 +84,15 @@ export const debug = () =>
         complete: parser(fromIndex(translateResult, index)),
       };
       translated.push(newChunk);
-      if (newChunk.complete.includes('"')) console.log("DETECT BAD FRAGMENT");
-      console.log([
-        newChunk.id,
-        newChunk.raw,
-        newChunk.transformed,
-        newChunk.translated,
-        newChunk.complete,
-      ]);
+      /*   if (newChunk.complete.match(/(?<!\\)"/g)) console.log("QUOTE DETECTED");
+      if (newChunk.transformed.includes("\n")) console.log("NEW LINE DETECTED");
+      if (
+        newChunk.complete.includes("span") ||
+        newChunk.complete.includes("div") ||
+        newChunk.complete.includes("translate")
+      )
+        console.log("ARTIFACT DETECTED"); */
+      /*  console.log([newChunk.raw, newChunk.transformed, newChunk.translated, newChunk.complete]); */
     }
 
     yield* applyFiles({ extractedFiles: fileList, translates: translated });

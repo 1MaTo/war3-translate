@@ -1,3 +1,4 @@
+import type { TranslateFromLocale } from "../../../store/locales";
 import {
   DeeplProvider,
   GoogleFreeProvider,
@@ -31,6 +32,36 @@ const JASSFunctionInfoList: JASSFunctionInfo[] = [
   { name: "DzFrameSetText", args: [1] },
   { name: "DisplayTimedTextToPlayer", args: [4] },
   { name: "SaveStr", args: [3] },
+  { name: "QuestMessageBJ", args: [2] },
+  { name: "TransmissionFromUnitTypeWithNameBJ", args: [3, 6] },
+  { name: "DisplayTextToForce", args: [1] },
+  { name: "CustomDefeatBJ", args: [1] },
+  { name: "DialogSetMessage", args: [1] },
+  { name: "CreateTextTagUnitBJ", args: [0] },
+  { name: "DialogAddButton", args: [1] },
+  { name: "MultiboardSetItemValue", args: [1] },
+  { name: "MultiboardSetTitleText", args: [1] },
+  { name: "SetMapName", args: [0] },
+  { name: "Ping_Fire", args: [7] },
+  { name: "Ping_Chat", args: [1] },
+  { name: "Music", args: [0] },
+];
+
+const customExpressionsMatchers = [
+  (
+    chunk: string,
+    locale: TranslateFromLocale,
+    parser: (value: string) => string,
+  ): ExtractedSubstring[] => {
+    const result: ExtractedSubstring[] = [];
+    for (const match of chunk.matchAll(
+      new RegExp(`set udg_s="(.*?${localeMatch[locale]}.*?)"`, "giu"),
+    )) {
+      const substring = match[1] as string;
+      result.push({ raw: substring, transformed: parser(substring) });
+    }
+    return result;
+  },
 ];
 
 export const makeCodeTranslateExtractor: MakeTranslateExtractor = ({ locale, provider }) => {
@@ -54,18 +85,13 @@ export const makeCodeTranslateExtractor: MakeTranslateExtractor = ({ locale, pro
         const fnArgsList = fromIndex(args, index);
         for (let index = 0; index < fnArgsList.length; index++) {
           const arg = fromIndex(fnArgsList, index);
-          if (!arg) {
-            console.warn(
-              `[makeCodeTranslateExtractor] Some arg ${index} for function ${fnInfo.name} is undefined`,
-            );
-            continue;
-          }
-
+          if (!arg) continue;
+          const fixedArg = arg.replaceAll('\\"', "&quot;");
           const multiString: string[] = [];
-          for (const match of arg.matchAll(/"(.*?)"/g)) {
+          for (const match of fixedArg.matchAll(/"(.*?)"/g)) {
             if (match[1]) multiString.push(match[1]);
           }
-          const stringsFromArg = multiString.length > 0 ? multiString : [arg];
+          const stringsFromArg = multiString.length > 0 ? multiString : [fixedArg];
 
           for (let index = 0; index < stringsFromArg.length; index++) {
             const finalString = fromIndex(stringsFromArg, index);
@@ -73,15 +99,31 @@ export const makeCodeTranslateExtractor: MakeTranslateExtractor = ({ locale, pro
             /** Take item only when there are anything to translate */
             if (!finalString.match(localeMatcher)) continue;
 
-            /** Prevent duplicates, all occurrences will be replaced anyway */
-            if (substringList.some((item) => item.raw === finalString)) continue;
-
-            substringList.push({ raw: finalString, transformed: parser(finalString) });
+            substringList.push({
+              raw: finalString.replaceAll("&quot;", '\\"'),
+              transformed: parser(finalString),
+            });
           }
         }
       }
     }
 
-    return substringList;
+    for (let index = 0; index < customExpressionsMatchers.length; index++) {
+      const expressionMatcher = fromIndex(customExpressionsMatchers, index);
+      const newItems = expressionMatcher(chunk, locale, parser);
+      substringList.push(...newItems);
+    }
+
+    const checkSet = new Set<string>();
+    const filteredSubstringList: ExtractedSubstring[] = [];
+    for (let index = 0; index < substringList.length; index++) {
+      const item = fromIndex(substringList, index);
+      if (checkSet.has(item.raw)) continue;
+
+      checkSet.add(item.raw);
+      filteredSubstringList.push(item);
+    }
+
+    return filteredSubstringList;
   };
 };
