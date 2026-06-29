@@ -2,17 +2,16 @@ import { Argument, Command, Option } from "commander";
 
 import { version } from "../package.json";
 import {
-  DeeplProvider,
   EN,
-  GoogleFreeProvider,
   KO,
   RU,
-  StringsFileProperties,
   translate,
   TranslateFromLocale,
-  TranslateProvider,
   TranslateToLocale,
   ZH,
+  DeeplProvider,
+  GoogleFreeProvider,
+  TranslateProvider,
 } from "./index.ts";
 
 const program = new Command();
@@ -45,21 +44,15 @@ program
   )
   .addOption(
     new Option(
-      "--include-files <filesToInclude...>",
-      "List of file names (as they named in map, case sensitive, with extension), when specified only this files will be processed",
+      "--include-files <regex...>",
+      "JS Regular expression to include files for translations, example: \\.txt will translate only text files",
     ),
   )
   .addOption(
     new Option(
-      "--exclude-files <filesToExclude...>",
-      "List of file names (as they named in map, case sensitive, with extension), when specified this files will not be translated even if specified in --include-files",
+      "--exclude-files <regex...>",
+      "JS Regular expression to exclude files for translations, example: \\.j will skip any code file; This option overwrite --include-files",
     ),
-  )
-  .addOption(
-    new Option(
-      "--exclude-string-props <propertiesToExclude...>",
-      "Advanced setting allows you to exclude string files from translation, as some of them may never appear in the game; this is useful when the translation API capabilities are limited.",
-    ).choices(StringsFileProperties.literals satisfies typeof StringsFileProperties.literals),
   )
   .option(
     "-s, --save <path>",
@@ -77,6 +70,7 @@ program
     "--deepl-glossary-id <deeplGlossaryId>",
     "Glossary id for deepl api, for more info check deepl api documentation",
   )
+  .option("--ignore-cache", "Ignore cache for translations", false)
   .option("-d, --debug", "Run in debug mode", false)
   .hook("preAction", (thisCommand) => {
     const { provider, deeplAuthKey } = thisCommand.opts();
@@ -94,32 +88,29 @@ program
         save,
         includeFiles,
         excludeFiles,
-        excludeStringProps,
         debug,
         deeplAuthKey,
         deeplContext,
         deeplGlossaryId,
+        ignoreCache,
       },
     ) => {
-      const isDeepl = provider === DeeplProvider.literals[0];
       try {
         await translate({
           from,
-          pathToMap: path,
           to,
           provider,
-          filesToInclude: includeFiles,
-          filesToExclude: excludeFiles,
+          pathToMap: path,
           pathToTranslatedMap: save,
-          propertiesToExclude: excludeStringProps,
+          fileFilter: {
+            include: includeFiles ? new RegExp(includeFiles) : undefined,
+            exclude: excludeFiles ? new RegExp(excludeFiles) : undefined,
+          },
+          ignoreCache,
+          options: {
+            deepl: { apiKey: deeplAuthKey, context: deeplContext, glossary: deeplGlossaryId },
+          },
           debug,
-          translateApiOptions: isDeepl
-            ? {
-                apiKey: deeplAuthKey,
-                context: deeplContext,
-                glossary: deeplGlossaryId,
-              }
-            : undefined,
         });
       } catch (error) {
         console.log(`Error: ${error instanceof Error ? error.message : error}`);

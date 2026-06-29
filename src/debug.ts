@@ -1,63 +1,26 @@
 import { NodeFileSystem } from "@effect/platform-node";
 import { Effect, HashMap, Layer, Logger, LogLevel } from "effect";
 
-import { applyFiles, type TranslatedChunk } from "./steps/lib/apply-files/apply-files";
-import { exportFiles } from "./steps/lib/export-files";
-import { importFiles } from "./steps/lib/import-files";
-import { providerParser } from "./steps/lib/parse-files/get-substring-to-translate/get-code-substring-to-translate";
-import { parseFiles } from "./steps/lib/parse-files/parse-files";
-import type { TranslateLibProps } from "./steps/lib/props";
-import { translateList } from "./steps/lib/translate/translate-list";
-import { TranslateError } from "./steps/store/error";
-import { fromIndex } from "./steps/utils/from-index";
-import { SimpleLogger } from "./steps/utils/simple-logger";
+import { fromIndex, providerParser, TranslateError, type ParsedSubstring } from "./lib";
+import { applyFiles, type TranslatedChunk } from "./lib/apply-files/apply-files";
+import { exportFiles } from "./lib/export-files";
+import { importFiles } from "./lib/import-files";
+import { parseFiles } from "./lib/parse-files/parse-files";
+import { translateList } from "./lib/translate/translate-list";
+import type { TranslateLibProps } from "./lib/types/props";
+import { SimpleLogger } from "./simple-logger";
 
-export const debug = () =>
+const getTranslations = ({
+  parsed,
+  ...props
+}: { parsed: HashMap.HashMap<string, ParsedSubstring> } & TranslateLibProps) =>
   Effect.gen(function* () {
-    yield* Effect.log("DEBUG START");
-
-    const props: TranslateLibProps = {
-      from: "ko",
-      to: "en",
-      pathToMap: "M:\\game\\warcraft\\Warcraft_1.28\\Maps\\test2\\translate_test.w3x",
-      pathToTranslatedMap:
-        "M:\\game\\warcraft\\Warcraft_1.28\\Maps\\test2\\translate_test_complete.w3x",
-      fileFilter: { include: /\.j/i },
-      provider: "google-free",
-      options: {
-        deepl: {
-          apiKey: "",
-          context: "일본 만화 영화",
-          glossary: "ec539a03-7086-4449-9a9c-033dc6380aba",
-        },
-      },
-      ignoreCache: false,
-    };
-
-    const fileList = yield* importFiles({
-      mapPath: props.pathToMap,
-      fileFilter: props.fileFilter,
-    });
-    const parsed = yield* parseFiles({
-      extractedFiles: fileList,
-      locale: props.from,
-      provider: props.provider,
-    });
-
-    /*  for (const [, substring] of parsed) {
-      console.log([substring.id, substring.raw, substring.transformed]);
-    } */
-
     const idList: string[] = [];
     const textList: string[] = [];
 
-    /* const DEBUG_ITEM_LIMIT = 50;
-    let DEBUG_ITEM_COUNT = 0; */
     for (const [_, item] of parsed) {
-      /*  if (DEBUG_ITEM_COUNT > DEBUG_ITEM_LIMIT) break; */
       idList.push(item.id);
       textList.push(item.transformed);
-      /*  DEBUG_ITEM_COUNT++; */
     }
 
     const translateResult = yield* translateList({
@@ -94,6 +57,44 @@ export const debug = () =>
         console.log("ARTIFACT DETECTED"); */
       /*  console.log([newChunk.raw, newChunk.transformed, newChunk.translated, newChunk.complete]); */
     }
+
+    return translated;
+  });
+
+export const debug = () =>
+  Effect.gen(function* () {
+    yield* Effect.log("DEBUG START");
+
+    const props: TranslateLibProps = {
+      from: "ko",
+      to: "en",
+      pathToMap: "M:\\game\\warcraft\\Warcraft_1.28\\Maps\\test2\\FBT 1.7.2 ENG47ReFix2 [ENG].w3x",
+      pathToTranslatedMap:
+        "M:\\game\\warcraft\\Warcraft_1.28\\Maps\\test2\\FBT 1.7.2 ENG47ReFix2 [ENG] full.w3x",
+      fileFilter: { include: /\.txt/i },
+      provider: "deepl",
+      options: {
+        deepl: {
+          apiKey: "",
+          context: "일본 만화 영화",
+          glossary: "ec539a03-7086-4449-9a9c-033dc6380aba",
+        },
+      },
+      ignoreCache: false,
+      debug: true,
+    };
+
+    const fileList = yield* importFiles({
+      mapPath: props.pathToMap,
+      fileFilter: props.fileFilter,
+    });
+    const parsed = yield* parseFiles({
+      extractedFiles: fileList,
+      locale: props.from,
+      provider: props.provider,
+    });
+
+    const translated = yield* getTranslations({ parsed, ...props });
 
     yield* applyFiles({ extractedFiles: fileList, translates: translated });
 

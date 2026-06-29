@@ -1,0 +1,43 @@
+import { mkdir } from "node:fs/promises";
+
+import { Effect } from "effect";
+
+import { TRANSLATED_DIR } from "../const";
+import type { ExtractedFileInfo } from "../import-files";
+import type { ParsedSubstring } from "../parse-files/get-substring-to-translate/common";
+import { ApplyError } from "../utils/error";
+import { fromIndex } from "../utils/from-index";
+import { applyFile, type ApplyChunk, type OnApplyTranslation } from "./apply-file";
+
+export type TranslatedChunk = ParsedSubstring & { translated: string; complete: string };
+
+export type ApplyFilesProps = {
+  extractedFiles: ExtractedFileInfo[];
+  translates: TranslatedChunk[];
+};
+
+export const applyFiles = ({ extractedFiles, translates }: ApplyFilesProps) =>
+  Effect.gen(function* () {
+    yield* Effect.promise(() => mkdir(TRANSLATED_DIR, { recursive: true }));
+
+    const onApplyTranslation: OnApplyTranslation = (data: ApplyChunk) =>
+      Effect.gen(function* () {
+        let newChunk = data.chunk;
+        for (let index = 0; index < data.tags.length; index++) {
+          const tag = fromIndex(data.tags, index);
+          const translation = translates.find((item) => item.id === tag.id);
+
+          if (!translation)
+            return yield* new ApplyError(`Translation not found for fragment ${tag.full}`);
+
+          newChunk = newChunk.replaceAll(tag.full, translation?.complete);
+        }
+        return newChunk;
+      });
+
+    const applyFileTaskList = extractedFiles.map((fileInfo) =>
+      applyFile({ ...fileInfo, onApplyTranslation }),
+    );
+
+    yield* Effect.all(applyFileTaskList, { concurrency: "unbounded" });
+  });

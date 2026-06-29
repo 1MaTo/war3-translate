@@ -1,0 +1,91 @@
+import { Chunk, Effect, Schedule, Sink, Stream } from "effect";
+
+import {
+  DeeplProvider,
+  GoogleFreeProvider,
+  type TranslateProvider,
+} from "../types/translate-provider";
+import { TranslateError } from "../utils/error";
+import type { MakeTranslateApiFn, TranslateInQueueProps } from "./common";
+import { translateDeepl } from "./provider/deepl.provider";
+import { translateGoogleFree } from "./provider/google.provider";
+
+const translateFnMap: Record<TranslateProvider, MakeTranslateApiFn> = {
+  [GoogleFreeProvider.literals[0]]: translateGoogleFree,
+  [DeeplProvider.literals[0]]: translateDeepl,
+} as const;
+
+type RateLimitOptions = {
+  getCost: (chunk: string) => number;
+  maxCost: number;
+  delay: number;
+};
+
+const rateLimitByProvider: Record<TranslateProvider, RateLimitOptions> = {
+  /** No more than 10000 chars in total */
+  [GoogleFreeProvider.literals[0]]: {
+    getCost: (chunk) => chunk.length,
+    maxCost: 10000,
+    delay: 1000,
+  },
+  /** No for that 40 separate items */
+  [DeeplProvider.literals[0]]: {
+    getCost: () => 1,
+    maxCost: 40,
+    delay: 300,
+  },
+};
+
+export const translateInQueue = ({
+  list,
+  from,
+  to,
+  provider = GoogleFreeProvider.literals[0],
+  options,
+}: TranslateInQueueProps) =>
+  Effect.gen(function* () {
+    const translateFn = translateFnMap[provider](options);
+    if (!translateFn)
+      return yield* new TranslateError(`No translate function found for "${provider}" provider`);
+
+    const { delay, getCost, maxCost } = rateLimitByProvider[provider];
+
+    const stream = Stream.fromIterable(list).pipe(
+      Stream.transduce(
+        Sink.foldWeighted({
+          initial: Chunk.empty<string>(),
+          maxCost: maxCost,
+          cost: (_, fragment) => getCost(fragment),
+          body: (group, fragment) => Chunk.append(group, fragment),
+        }),
+      ),
+      Stream.zipWithIndex,
+      Stream.mapEffect(([value, index]) =>
+        Effect.gen(function* () {
+          const list: string[] = [];
+
+          let totalCharCount = 0;
+          Chunk.forEach(value, (fragment) => {
+            list.push(fragment);
+            totalCharCount += fragment.length;
+          });
+
+          yield* Effect.logDebug(
+            `[Translate queue ${index + 1}] chunk of ${totalCharCount} chars...`,
+          );
+
+          const result = yield* Effect.tryPromise({
+            try: () => translateFn({ list, from, to }),
+            catch: (error) =>
+              new TranslateError(`Failed to translate chunk... ${String(error)}`, error),
+          });
+
+          return Chunk.fromIterable(result);
+        }),
+      ),
+      Stream.schedule(Schedule.spaced(delay)),
+      Stream.flattenChunks,
+    );
+
+    return Chunk.toArray(yield* Stream.runCollect(stream));
+  });

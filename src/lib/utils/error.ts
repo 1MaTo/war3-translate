@@ -1,0 +1,34 @@
+import { Data } from "effect";
+import { isError } from "effect/Predicate";
+
+type AppError = {
+  message?: string;
+  originalMessage: string;
+};
+
+export class ImportError extends Data.TaggedError("ImportError")<AppError> {
+  constructor(message: string, error?: unknown) {
+    super({
+      message: `[IMPORT] ${message}`,
+      originalMessage: isError(error) ? error.message : "unknown",
+    });
+  }
+}
+
+export class ApplyError extends Data.TaggedError("ApplyError")<AppError> {
+  constructor(message: string, error?: unknown) {
+    super({
+      message: `[APPLY] ${message}`,
+      originalMessage: isError(error) ? error.message : "unknown",
+    });
+  }
+}
+
+export class TranslateError extends Data.TaggedError("TranslateError")<AppError> {
+  constructor(message: string, error?: unknown) {
+    super({
+      message: message,
+      originalMessage: isError(error) ? error.message : "unknown",
+    });
+  }
+}
