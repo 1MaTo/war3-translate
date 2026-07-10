@@ -1,6 +1,5 @@
 import { Effect } from "effect";
 
-import { debug } from "./debug";
 import type { TranslateLibProps } from "./lib";
 import { translateMap } from "./translate";
 
@@ -19,4 +18,4 @@ export {
 /** Translate map and return path new file */
 export const translate = (props: TranslateLibProps) => Effect.runPromise(translateMap(props));
 
-Effect.runPromise(debug());
+/* Effect.runPromise(debug()); */

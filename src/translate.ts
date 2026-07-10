@@ -16,6 +16,7 @@ import {
   type ParsedSubstring,
   type TranslatedChunk,
   type TranslateLibProps,
+  getManualTranslations,
 } from "./lib";
 import { SimpleLogger } from "./simple-logger";
 
@@ -26,15 +27,30 @@ const getTranslations = ({
   to,
   ignoreCache,
   options,
+  pathToManualTranslations,
 }: { parsed: HashMap.HashMap<string, ParsedSubstring> } & Pick<
   TranslateLibProps,
-  "ignoreCache" | "from" | "to" | "provider" | "options"
+  "ignoreCache" | "from" | "to" | "provider" | "options" | "pathToManualTranslations"
 >) =>
   Effect.gen(function* () {
+    const translated: TranslatedChunk[] = [];
+
     const idList: string[] = [];
     const textList: string[] = [];
 
+    const manualTranslations = yield* getManualTranslations(pathToManualTranslations);
+
     for (const [_, item] of parsed) {
+      const manualTranslation = manualTranslations[item.raw];
+      if (typeof manualTranslation !== "undefined") {
+        translated.push({
+          ...item,
+          translated: manualTranslation,
+          complete: manualTranslation,
+        });
+        continue;
+      }
+
       idList.push(item.id);
       textList.push(item.transformed);
     }
@@ -50,8 +66,6 @@ const getTranslations = ({
 
     if (textList.length !== translateResult.length)
       return yield* new TranslateError("Translated item count not equal to total text count");
-
-    const translated: TranslatedChunk[] = [];
 
     for (let index = 0; index < translateResult.length; index++) {
       const chunk = yield* HashMap.get(parsed, fromIndex(idList, index));
@@ -80,34 +94,6 @@ const getTranslations = ({
 export const translateMap = (props: TranslateLibProps) =>
   Effect.gen(function* () {
     yield* Effect.log(`Translating Map: ${path.basename(props.pathToMap)}\n`);
-
-    /*  yield* withTime(importFiles, "Importing files...");
-
-    yield* withTime(parse, "Parsing files...");
-
-    yield* withTime(translate, "Translating files...");
-
-    yield* withTime(apply, "Applying translation...");
-
-    const resultPath = yield* withTime(exportFiles, "Export files to map..."); */
-
-    /* const props: TranslateLibProps = {
-      from: "ko",
-      to: "en",
-      pathToMap: "M:\\game\\warcraft\\Warcraft_1.28\\Maps\\test2\\FBT 1.7.2 ENG47ReFix2 [ENG].w3x",
-      pathToTranslatedMap:
-        "M:\\game\\warcraft\\Warcraft_1.28\\Maps\\test2\\FBT 1.7.2 ENG47ReFix2 [ENG] full.w3x",
-      fileFilter: { include: /\.txt/i },
-      provider: "deepl",
-      options: {
-        deepl: {
-          apiKey: "dcf6100c-03f1-4c31-a688-e9aa9ffac571:fx",
-          context: "일본 만화 영화",
-          glossary: "ec539a03-7086-4449-9a9c-033dc6380aba",
-        },
-      },
-      ignoreCache: false,
-    }; */
 
     yield* Effect.log("[1] Importing...");
 

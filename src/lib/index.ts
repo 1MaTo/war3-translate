@@ -3,6 +3,8 @@ export type { ParsedSubstring } from "./parse-files/get-substring-to-translate/c
 export type { TranslatedChunk } from "./apply-files/apply-files";
 export { TranslateError } from "./utils/error";
 export { TranslateFromLocale, TranslateToLocale, EN, KO, RU, ZH } from "./types/locales";
+export { getManualTranslations } from "./get-manual-translations";
+export type { ManualTranslations } from "./get-manual-translations";
 
 export { fromIndex } from "./utils/from-index";
 export { cleanFiles } from "./clean-files";

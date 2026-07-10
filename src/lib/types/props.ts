@@ -11,6 +11,7 @@ export type TranslateLibProps = {
   pathToMap: string;
   /** Full path with map name and extension */
   pathToTranslatedMap?: string;
+  pathToManualTranslations?: string;
   from: TranslateFromLocale;
   to: TranslateToLocale;
   provider: TranslateProvider;

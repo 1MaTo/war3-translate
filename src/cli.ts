@@ -70,6 +70,10 @@ program
     "--deepl-glossary-id <deeplGlossaryId>",
     "Glossary id for deepl api, for more info check deepl api documentation",
   )
+  .option(
+    "--manual <path>",
+    "Manual translation json file (key - raw string, value - desired translation) that will be checked against raw, must specify whole string, will not be applied for partial match, manual translations are not cached",
+  )
   .option("--ignore-cache", "Ignore cache for translations", false)
   .option("-d, --debug", "Run in debug mode", false)
   .hook("preAction", (thisCommand) => {
@@ -93,6 +97,7 @@ program
         deeplContext,
         deeplGlossaryId,
         ignoreCache,
+        manual,
       },
     ) => {
       try {
@@ -102,6 +107,7 @@ program
           provider,
           pathToMap: path,
           pathToTranslatedMap: save,
+          pathToManualTranslations: manual,
           fileFilter: {
             include: includeFiles ? new RegExp(includeFiles) : undefined,
             exclude: excludeFiles ? new RegExp(excludeFiles) : undefined,
