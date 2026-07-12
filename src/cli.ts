@@ -45,13 +45,13 @@ program
   .addOption(
     new Option(
       "--include-files <regex...>",
-      "JS Regular expression to include files for translations, example: \\.txt will translate only text files",
+      "JS Regular expression to include files for translations (case insensitive), example: \\.txt will translate only text files",
     ),
   )
   .addOption(
     new Option(
       "--exclude-files <regex...>",
-      "JS Regular expression to exclude files for translations, example: \\.j will skip any code file; This option overwrite --include-files",
+      "JS Regular expression to exclude files for translations (case insensitive), example: \\.j will skip any code file; This option overwrite --include-files",
     ),
   )
   .option(
@@ -109,8 +109,8 @@ program
           pathToTranslatedMap: save,
           pathToManualTranslations: manual,
           fileFilter: {
-            include: includeFiles ? new RegExp(includeFiles) : undefined,
-            exclude: excludeFiles ? new RegExp(excludeFiles) : undefined,
+            include: includeFiles ? new RegExp(includeFiles, "i") : undefined,
+            exclude: excludeFiles ? new RegExp(excludeFiles, "i") : undefined,
           },
           ignoreCache,
           options: {
