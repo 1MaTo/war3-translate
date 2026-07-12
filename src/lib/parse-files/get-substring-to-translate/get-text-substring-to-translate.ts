@@ -47,15 +47,30 @@ const validProperty: string[] = [
   "upkeep_none",
 ];
 
-export const makeTextTranslateExtractor: MakeTranslateExtractor = ({ locale, provider }) => {
-  const matcher = new RegExp(
-    `^(?:${validProperty.join("|")})=(.*${localeMatch[locale]}+.*)$`,
-    "iu",
-  );
+export const makeTextTranslateExtractor: MakeTranslateExtractor = ({
+  locale,
+  provider,
+  manual,
+}) => {
+  const matchByPattern = new RegExp(`^(?:${validProperty.join("|")})=(.*)$`, "i");
+  const matchByLocale = new RegExp(`^.*${localeMatch[locale]}+.*$`, "iu");
+
   const parser = providerParser[provider].txt.encode;
   return (line) => {
-    const raw = line.match(matcher)?.[1];
+    const raw = line.match(matchByPattern)?.[1];
     if (!raw) return null;
+
+    if (typeof manual[raw] !== "undefined") {
+      return [
+        {
+          raw,
+          transformed: raw,
+          manual: manual[raw],
+        },
+      ];
+    }
+
+    if (!raw.match(matchByLocale)) return null;
 
     return [
       {

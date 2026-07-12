@@ -1,3 +1,4 @@
+import type { ManualTranslations } from "../../get-manual-translations";
 import type { ExtensionToTranslate, JASSExtension, StringsExtension } from "../../types/extensions";
 import { KO, ZH, type TranslateFromLocale } from "../../types/locales";
 import type { TranslateProvider } from "../../types/translate-provider";
@@ -14,12 +15,15 @@ export type ExtractedSubstring = {
   raw: string;
   /** Parsed substring according to locale and file format */
   transformed: string;
+  /** This is manual translation if specified */
+  manual?: string;
 };
 
 /** Parse chunk if found text to translate and return info, null if nothing to translate */
 export type MakeTranslateExtractor = (props: {
   locale: TranslateFromLocale;
   provider: TranslateProvider;
+  manual: ManualTranslations;
 }) => (chunk: string) => ExtractedSubstring[] | null;
 
 export const localeMatch: Record<TranslateFromLocale, string> = {

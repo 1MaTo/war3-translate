@@ -16,7 +16,6 @@ import {
   type ParsedSubstring,
   type TranslatedChunk,
   type TranslateLibProps,
-  getManualTranslations,
 } from "./lib";
 import { SimpleLogger } from "./simple-logger";
 
@@ -27,7 +26,6 @@ const getTranslations = ({
   to,
   ignoreCache,
   options,
-  pathToManualTranslations,
 }: { parsed: HashMap.HashMap<string, ParsedSubstring> } & Pick<
   TranslateLibProps,
   "ignoreCache" | "from" | "to" | "provider" | "options" | "pathToManualTranslations"
@@ -38,15 +36,12 @@ const getTranslations = ({
     const idList: string[] = [];
     const textList: string[] = [];
 
-    const manualTranslations = yield* getManualTranslations(pathToManualTranslations);
-
     for (const [_, item] of parsed) {
-      const manualTranslation = manualTranslations[item.raw];
-      if (typeof manualTranslation !== "undefined") {
+      if (item.manual) {
         translated.push({
           ...item,
-          translated: manualTranslation,
-          complete: manualTranslation,
+          translated: item.manual,
+          complete: item.manual,
         });
         continue;
       }
@@ -108,6 +103,7 @@ export const translateMap = (props: TranslateLibProps) =>
       extractedFiles: fileList,
       locale: props.from,
       provider: props.provider,
+      pathToManualTranslations: props.pathToManualTranslations,
     });
 
     yield* Effect.log("[3] Translating...");

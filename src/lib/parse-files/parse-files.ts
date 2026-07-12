@@ -3,6 +3,7 @@ import { mkdir } from "node:fs/promises";
 import { Effect, HashMap, Ref } from "effect";
 
 import { PARSED_DIR } from "../const";
+import { getManualTranslations } from "../get-manual-translations";
 import type { ExtractedFileInfo } from "../import-files";
 import type { TranslateFromLocale } from "../types/locales";
 import type { TranslateProvider } from "../types/translate-provider";
@@ -13,19 +14,31 @@ export type ParseFilesProps = {
   extractedFiles: ExtractedFileInfo[];
   locale: TranslateFromLocale;
   provider: TranslateProvider;
+  pathToManualTranslations?: string;
 };
 
-export const parseFiles = ({ extractedFiles, locale, provider }: ParseFilesProps) =>
+export const parseFiles = ({
+  extractedFiles,
+  locale,
+  provider,
+  pathToManualTranslations,
+}: ParseFilesProps) =>
   Effect.gen(function* () {
     yield* Effect.promise(() => mkdir(PARSED_DIR, { recursive: true }));
-
+    const manualTranslations = yield* getManualTranslations(pathToManualTranslations);
     const ref = yield* Ref.make(HashMap.empty<string, ParsedSubstring>());
 
     const onNewFragment = (data: ParsedSubstring) =>
       Ref.update(ref, (map) => HashMap.set(map, data.id, data));
 
     const parseFileTaskList = extractedFiles.map((fileInfo) =>
-      parseFile({ ...fileInfo, locale, onNewFragment: onNewFragment, provider }),
+      parseFile({
+        ...fileInfo,
+        locale,
+        onNewFragment: onNewFragment,
+        provider,
+        manual: manualTranslations,
+      }),
     );
 
     yield* Effect.all(parseFileTaskList, { concurrency: "unbounded" });

@@ -48,7 +48,11 @@ const customExpressionsMatchers = [
   },
 ];
 
-export const makeCodeTranslateExtractor: MakeTranslateExtractor = ({ locale, provider }) => {
+export const makeCodeTranslateExtractor: MakeTranslateExtractor = ({
+  locale,
+  provider,
+  manual,
+}) => {
   const localeMatcher = new RegExp(`.*${localeMatch[locale]}.*`, "iu");
   // Indicates that there may be color code per symbol which greatly degrade translations
   const tooManyColorCodesMatcher = new RegExp(
@@ -86,11 +90,20 @@ export const makeCodeTranslateExtractor: MakeTranslateExtractor = ({ locale, pro
           for (let index = 0; index < stringsFromArg.length; index++) {
             let finalString = fromIndex(stringsFromArg, index);
 
+            const rawFinalString = finalString.replaceAll("&quot;", '\\"');
+            if (typeof manual[rawFinalString] !== "undefined") {
+              substringList.push({
+                raw: rawFinalString,
+                transformed: rawFinalString,
+                manual: manual[rawFinalString],
+              });
+              continue;
+            }
+
             /** Take item only when there are anything to translate */
             if (!finalString.match(localeMatcher)) continue;
 
             /** If color code used per symbol, remove all color codes and wrap all phrase in the first one */
-
             let stringToParse = finalString;
             if (stringToParse.match(tooManyColorCodesMatcher)) {
               const firstColorCode = stringToParse.match(/\|c[A-Fa-f0-9]{8}/gi)![0];

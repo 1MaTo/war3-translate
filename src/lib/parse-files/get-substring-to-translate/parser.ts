@@ -4,6 +4,7 @@ import path from "node:path";
 import { Effect } from "effect";
 
 import { PARSED_DIR, RAW_DIR } from "../../const";
+import { type ManualTranslations } from "../../get-manual-translations";
 import type { ExtractedFileInfo } from "../../import-files";
 import { ExtensionToTranslate, JASSExtension, StringsExtension } from "../../types/extensions";
 import type { TranslateFromLocale } from "../../types/locales";
@@ -18,6 +19,7 @@ type ParseFileProps = {
   onNewFragment: (data: ParsedSubstring) => Effect.Effect<void>;
   locale: TranslateFromLocale;
   provider: TranslateProvider;
+  manual: ManualTranslations;
 } & ExtractedFileInfo;
 
 const makeTranslateExtractor: Record<ExtensionToTranslate, MakeTranslateExtractor | (() => null)> =
@@ -26,9 +28,20 @@ const makeTranslateExtractor: Record<ExtensionToTranslate, MakeTranslateExtracto
     [JASSExtension.literals[0]]: makeCodeTranslateExtractor,
   };
 
-export const parseFile = ({ onNewFragment, extension, name, locale, provider }: ParseFileProps) =>
+export const parseFile = ({
+  onNewFragment,
+  extension,
+  name,
+  locale,
+  provider,
+  manual,
+}: ParseFileProps) =>
   Effect.gen(function* () {
-    const extractTranslation = makeTranslateExtractor[extension]({ locale, provider });
+    const extractTranslation = makeTranslateExtractor[extension]({
+      locale,
+      provider,
+      manual,
+    });
     if (!extractTranslation) {
       yield* Effect.logWarning(`[parseFile] Parse fn not found for "${extension}" extension`);
       return null;
